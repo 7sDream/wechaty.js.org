@@ -1,0 +1,1404 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="https://wechaty.js.org/feed.xml" rel="self" type="application/atom+xml" /><link href="https://wechaty.js.org/" rel="alternate" type="text/html" /><updated>2021-06-17T20:26:35+00:00</updated><id>https://wechaty.js.org/feed.xml</id><title type="html">Wechaty</title><subtitle>Conversational RPA SDK for Chatbot Makers</subtitle><entry><title type="html">New Wechaty Puppet Service: SimplePad</title><link href="https://wechaty.js.org/2021/06/17/puppet-simplepad-hello/" rel="alternate" type="text/html" title="New Wechaty Puppet Service: SimplePad" /><published>2021-06-17T00:00:00+00:00</published><updated>2021-06-17T00:00:00+00:00</updated><id>https://wechaty.js.org/2021/06/17/puppet-simplepad-hello</id><content type="html" xml:base="https://wechaty.js.org/2021/06/17/puppet-simplepad-hello/">&lt;p&gt;大家好,我是&lt;a href=&quot;https://github.com/chatrbot/wechaty-puppet-simplepad&quot;&gt;SimplePad&lt;/a&gt;的开发者,也是之前&lt;a href=&quot;https://github.com/chatrbot/chatbot&quot;&gt;小丸子&lt;/a&gt;项目的开发者,群里的”银河飞车”.&lt;/p&gt;
+
+&lt;p&gt;之前也在我们Wechaty群内宣传(&lt;del&gt;搔扰&lt;/del&gt;)过几次大家,可能有些同学已经见过或者使用过了.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Wechaty-Puppet&lt;/code&gt;我们大家已经很熟悉了,得益于Wechaty精巧合理的接口设计和高度抽象的模型,让我们在使用Puppet的时候得心应手的同时又能十分方便的在各种Puppet中切换自如.&lt;/p&gt;
+
+&lt;p&gt;在我们享受SDK这种模式给我带来的便捷的同时,可能偶尔也会因此受到一些困扰:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;ol&gt;
+    &lt;li&gt;依赖冗余.例如你的项目里只是想用Bot发送一些简单的文本内容,但是不得不引入整个SDK生态来达到这一个目的.&lt;/li&gt;
+    &lt;li&gt;使用受限.得益于社区的发展,现在除了官方Node版本的Wecahty外,已经有了&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;python-wechaty&lt;/code&gt;和&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;go-wechaty&lt;/code&gt;等其他语言项目.但如果你使用的是其他语言,就只能选择自己开发一个对应语言的Wechaty或者学习一门已有Wechaty实现的语言.&lt;/li&gt;
+    &lt;li&gt;调试不易.如果我们使用的SDK中出现问题,只能研究其中的源码实现来做本地临时修正,或者提交一份PR,更或者只能联系(等待)开发者修复.这样会影响我们的开发进度,增加额外的排错时间.&lt;/li&gt;
+    &lt;li&gt;功能冗余.比如你的机器人只想发送一些简单的文本信息,但是必须购买完整功能的Token,这在我看来并不是最佳的使用体验.&lt;/li&gt;
+  &lt;/ol&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;好在Wechaty社区也考虑到了这些问题,并且提供了一个正在开发的方案&lt;a href=&quot;https://github.com/wechaty/openapi&quot;&gt;WechatyOpenAPI&lt;/a&gt;,提供一个网关来对接目前的&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Wechaty-Grpc-Service&lt;/code&gt;,而对外提供一整套Restful形式的Http接口来解决我上面说的问题.&lt;/p&gt;
+
+&lt;p&gt;我说这么多可能大家心里会想:那这些和SimplePad又有什么关系?&lt;/p&gt;
+
+&lt;p&gt;我想说的是,有关系而且关系还挺大.&lt;/p&gt;
+
+&lt;p&gt;在开发SimplePad之前我也调查了目前市场上的Wechaty方案,意识到了前面说的几个痛点,为了解决上面说的几个问题,已经先开发了一套Http协议调用形式的协议系统,而SimplePad反而是之后才进行开发的.所以自然而然,整个SimplePad的API部分也是完全使用了这套系统的接口.对于我们互联网开发工作者而言,Http是使用最多也是最熟悉的协议方案,协议清晰易懂,调试方便,这也是SimplePad名称的由来和核心意义.希望给大家提供一个方便使用,调试简单的Puppet.开发者在拥有Token后可以选择使用Puppet,也可以选择直接调用Http协议的形式来实现相应的操作.这里我为大家画了一个简单的流程图.
+&lt;img src=&quot;/assets/2021/06-puppet-simplepad-hello/process.png&quot; alt=&quot;process&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;所以对于上面说的几个问题,SimplePad提供的方案更为灵活.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;没有第三方库的依赖&lt;/li&gt;
+  &lt;li&gt;也没有开发语言的限制&lt;/li&gt;
+  &lt;li&gt;调试更为简单直观,可以使用开发者常用的Postman,也可以使用我在后台提供的API调试工具&lt;/li&gt;
+  &lt;li&gt;按需使用(为了保证基本使用流程通畅,会有一些必须选择的接口).开发者可以自由选择需要的接口,按需付费.&lt;/li&gt;
+  &lt;li&gt;提供一个完善功能的后台,可以方便调试接口和管理自己的Token.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;以上就是SimplePad开发的初衷和由来,以及我在解决目前社区痛点问题上的思路和一些小小的优势,更深入的使用和体验欢迎大家来探索.&lt;/p&gt;
+
+&lt;p&gt;也期望大家能够和我积极&lt;a href=&quot;https://github.com/chatrbot/wechaty-puppet-simplepad/issues&quot;&gt;交流反馈&lt;/a&gt;,我会尽最大努力让开发者们获得最优的使用体验.&lt;/p&gt;</content><author><name>simplepad</name></author><category term="announcement" /><category term="puppet" /><category term="featured" /><category term="simplepad" /><category term="puppet-provider" /><category term="puppet-service" /><summary type="html">大家好,我是SimplePad的开发者,也是之前小丸子项目的开发者,群里的”银河飞车”.</summary><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="https://wechaty.js.org/assets/2021/06-puppet-simplepad-hello/logo.png" /><media:content medium="image" url="https://wechaty.js.org/assets/2021/06-puppet-simplepad-hello/logo.png" xmlns:media="http://search.yahoo.com/mrss/" /></entry><entry><title type="html">GSoD’21 Third Meeting</title><link href="https://wechaty.js.org/2021/06/06/gsod-2021-third-meeting/" rel="alternate" type="text/html" title="GSoD’21 Third Meeting" /><published>2021-06-06T00:00:00+00:00</published><updated>2021-06-06T00:00:00+00:00</updated><id>https://wechaty.js.org/2021/06/06/gsod-2021-third-meeting</id><content type="html" xml:base="https://wechaty.js.org/2021/06/06/gsod-2021-third-meeting/">&lt;h2 id=&quot;google-season-of-docs21-third-meeting&quot;&gt;Google Season of Docs’21 third meeting&lt;/h2&gt;
+
+&lt;h3 id=&quot;meeting-summary&quot;&gt;Meeting Summary&lt;/h3&gt;
+
+&lt;p&gt;It was the third meeting of the GSoD’21 participants, some grievances were to be resolved in the meeting, and they got resolved as well.&lt;/p&gt;
+
+&lt;p&gt;In this meeting, firstly every participant gave one’s week summary and informed the community about their plans for the upcoming week. After that, I raised my concern regarding big PRs and we had a discussion about the scope and size of the PRs, next I asked for an explanation from the teams which had lacked to maintain the Wecahty Weekly follow-ups. Following that Simin gave a presentation on things you should remember when you are documenting. Later we had a suggestions/Q&amp;amp;A session, in which Vasvi and Sajen raised their concerns and at last, we took a lovely group photo.&lt;/p&gt;
+
+&lt;div style=&quot;
+    position: relative;
+    padding-bottom: 56.25%;
+    padding-top:30px;
+    height:0;
+    overflow:hidden;
+&quot;&gt;
+  &lt;iframe src=&quot;https://www.youtube.com/embed/GE4Kq0JSdYE&quot; allowfullscreen=&quot;&quot; webkitallowfullscreen=&quot;&quot; frameborder=&quot;0&quot; style=&quot;
+      position: absolute;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+    &quot;&gt;
+&lt;/iframe&gt;
+
+&lt;/div&gt;
+
+&lt;h3 id=&quot;attendees&quot;&gt;Attendees&lt;/h3&gt;
+
+&lt;p&gt;Total 12 attendees attended the meeting. They are:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Rohitesh Jain, Volunteer (UTC + 5:30)&lt;/li&gt;
+  &lt;li&gt;Sajen Sarvajith, Reconstruct Landing page writer (UTC + 5:30)&lt;/li&gt;
+  &lt;li&gt;Abhishek Jaiswal, How-to-guide section writer (UTC + 05:30)&lt;/li&gt;
+  &lt;li&gt;Simin Liao, Volunteer (+8:00)&lt;/li&gt;
+  &lt;li&gt;Mukosa Joseph mawa, Introductions and Explanations section writer (UTC +03:00)&lt;/li&gt;
+  &lt;li&gt;Rajiv Ranjan Singh, Improve the gRPC and OpenAPI ecosystem writer, rajivperfect007@gmail.com, IST (UTC +5:30)&lt;/li&gt;
+  &lt;li&gt;Souvik Biswas, Create easy to learn tutorials for beginner users writer, sbis1999@gmail.com (UTC +05:30)&lt;/li&gt;
+  &lt;li&gt;Soumi Bardhan, Improve References section writer (UTC + 5:30)&lt;/li&gt;
+  &lt;li&gt;Shwetal Soni, Create easy to learn tutorials for beginners users writer (UTC +05:30)&lt;/li&gt;
+  &lt;li&gt;Chris Estepa,  Introduction and Explanations sections writer (UTC +08:00)&lt;/li&gt;
+  &lt;li&gt;Vasvi Sood, How to guides, contactvasvisood@gmail.com writer (UTC + 5:30)&lt;/li&gt;
+  &lt;li&gt;Arnab Saha, Reconstruction of Landing page with value propositions writer (UTC + 5:30)&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h4 id=&quot;notes&quot;&gt;Notes&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Shraddha maybe had a network issue, everyone else was present.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/2021/06-gsod-2021-third-meeting/gsod-meeting-teasor.webp&quot; alt=&quot;Google Season of Docs 2021: Wechaty GSoD'21 Group Photo&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;agendas&quot;&gt;Agendas&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://youtu.be/GE4Kq0JSdYE?t=20&quot;&gt;0:00:20&lt;/a&gt; 1. Week Summaries&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://youtu.be/GE4Kq0JSdYE?t=910&quot;&gt;0:15:10&lt;/a&gt; 2. Discussion about the scope and size of PRs&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://youtu.be/GE4Kq0JSdYE?t=1147&quot;&gt;0:19:07&lt;/a&gt; 3. Explanation for not updating the Wechaty follow-ups&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://youtu.be/GE4Kq0JSdYE?t=1227&quot;&gt;0:20:25&lt;/a&gt; 4. Presentation by Simin on things you should remember when you are documenting&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://youtu.be/GE4Kq0JSdYE?t=1740&quot;&gt;0:29:00&lt;/a&gt; 5. Questions &amp;amp; Comments&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;You can learn more from our &lt;a href=&quot;https://docs.google.com/document/d/1fVCk8qRYc4RKGMf2UY5HOe07hEhPUOpGC34v88GEFJg/edit#heading=h.edr3nzd8l43b&quot;&gt;meeting notes&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&quot;meeting-outcomes&quot;&gt;Meeting Outcomes&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;The community got to know about the progress and plans of the members&lt;/li&gt;
+  &lt;li&gt;PRs would be more atomic (single PR will deal with a single task)&lt;/li&gt;
+  &lt;li&gt;Wechaty Weekly Follow-ups would be updated strictly&lt;/li&gt;
+  &lt;li&gt;Simin made it clear what should one remember while documenting&lt;/li&gt;
+  &lt;li&gt;Volunteer got to know the grievances of Sajen and Vasvi&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;meeting-follow-ups&quot;&gt;Meeting Follow-ups&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;See what codes snippets are required by Vasvi and her team&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/wechaty/wechaty.js.org/issues/912&quot;&gt;Review&lt;/a&gt; the new landing page design&lt;/li&gt;
+&lt;/ul&gt;</content><author><name>rohitesh-kumar-jain</name></author><category term="gsod" /><category term="google" /><category term="gsod" /><category term="event" /><category term="gsod" /><category term="2021" /><category term="zoom" /><category term="docs" /><summary type="html">Google Season of Docs’21 third meeting</summary><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="https://wechaty.js.org/assets/2021/06-gsod-2021-third-meeting/gsod-meeting-teasor.webp" /><media:content medium="image" url="https://wechaty.js.org/assets/2021/06-gsod-2021-third-meeting/gsod-meeting-teasor.webp" xmlns:media="http://search.yahoo.com/mrss/" /></entry><entry><title type="html">Documentation Structure</title><link href="https://wechaty.js.org/2021/05/30/simin-documentation-structure/" rel="alternate" type="text/html" title="Documentation Structure" /><published>2021-05-30T00:00:00+00:00</published><updated>2021-05-30T00:00:00+00:00</updated><id>https://wechaty.js.org/2021/05/30/simin-documentation-structure</id><content type="html" xml:base="https://wechaty.js.org/2021/05/30/simin-documentation-structure/">&lt;h2 id=&quot;documentation-structure&quot;&gt;Documentation Structure&lt;/h2&gt;
+
+&lt;p&gt;While documenting a software, the first thing you come across is how to structure the documentation. Similar to building a house, you begin by drawing the architecture of the building. With good documentation structure, the software will be more accessible. Users no longer have to undergo the “&lt;em&gt;trial and error&lt;/em&gt;” phase, and could easily find the correct topic for their questions. In Wechaty project, the structure follows the &lt;a href=&quot;https://documentation.divio.com/#&quot;&gt;Documentation system&lt;/a&gt; and is separated into four sections:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Tutorials&lt;/li&gt;
+  &lt;li&gt;How-to guides&lt;/li&gt;
+  &lt;li&gt;Explanation&lt;/li&gt;
+  &lt;li&gt;Reference&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;type&lt;/th&gt;
+      &lt;th&gt;Tutorials&lt;/th&gt;
+      &lt;th&gt;How-to guide&lt;/th&gt;
+      &lt;th&gt;Reference&lt;/th&gt;
+      &lt;th&gt;Explanation&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;oriented to&lt;/td&gt;
+      &lt;td&gt;learning&lt;/td&gt;
+      &lt;td&gt;a goal&lt;/td&gt;
+      &lt;td&gt;information&lt;/td&gt;
+      &lt;td&gt;understanding&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;must&lt;/td&gt;
+      &lt;td&gt;allow the newcomer to get started&lt;/td&gt;
+      &lt;td&gt;show how to solve a specific problem&lt;/td&gt;
+      &lt;td&gt;describe the machinery&lt;/td&gt;
+      &lt;td&gt;explain&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;its form&lt;/td&gt;
+      &lt;td&gt;a lesson&lt;/td&gt;
+      &lt;td&gt;a series of steps&lt;/td&gt;
+      &lt;td&gt;dry description&lt;/td&gt;
+      &lt;td&gt;discursive explanation&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;analogy&lt;/td&gt;
+      &lt;td&gt;teaching a small child how to cook&lt;/td&gt;
+      &lt;td&gt;a recipe in a cookery book&lt;/td&gt;
+      &lt;td&gt;a reference encyclopaedia article&lt;/td&gt;
+      &lt;td&gt;an article on culinary social history&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;According to the table, the first two sections (tutorials and how-to guide) focus more on practical steps. They provide clear instructions for the users to follow. On the other hand, the latter two sections (explanation and reference) focus more on theoretical knowledge. They provide background information about the software.&lt;/p&gt;
+
+&lt;h3 id=&quot;tutorials&quot;&gt;Tutorials&lt;/h3&gt;
+
+&lt;p&gt;Tutorials teach users how to implement the software step by step. The target audience are those with no experience to the software. The users are passive, and they are waiting for you to feed them the knowledge they need to know when they are trying to use the software.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/2021/05-simin-documentation-structure/tutorials.png&quot; alt=&quot;tutorials&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;From the picture above, the left side with bulleted points is detailed guidance for documenting tutorials. By following the notice, you can avoid writing out of scope. The right side is the drafted structure proposed by team tutorials (Souvik Biswas and Shwetal Soni) in week 1. The topics that need to further discussed are highlighted in red.&lt;/p&gt;
+
+&lt;p&gt;The three highlighted topics under &lt;em&gt;Quick start&lt;/em&gt; are similar to the topics proposed in project &lt;em&gt;Explanation&lt;/em&gt;. In order to prevent overlapping, writers from team tutorials and team explanation will discuss about this part and refine their structures.&lt;/p&gt;
+
+&lt;p&gt;For the five highlighted topics under &lt;em&gt;Advanced Usage&lt;/em&gt;, they more or less contradict the guides &lt;em&gt;no distraction&lt;/em&gt; and &lt;em&gt;inspiring confidence&lt;/em&gt; mentioned on the left side. For example, &lt;em&gt;Usage with Docker&lt;/em&gt; aligns with &lt;em&gt;Usage with Heroku&lt;/em&gt;. The users need to figure out which platform they are going to use first, and then select the corresponding topics. This step requires more prerequisites than using Wechaty requires. The users may be frustrated and give up learning Wechaty at the end. Documents in tutorials should take proactive actions. Instead of providing a lot of information, you should arrange the lessons with just engough knowledge for your readers.&lt;/p&gt;
+
+&lt;h3 id=&quot;how-to-guides&quot;&gt;How-to guides&lt;/h3&gt;
+
+&lt;p&gt;The how-to guides is like a general Q&amp;amp;A. It acts as a supporting role, so each topic in this section is independent. The target audience are not expected to follow the sequence and should have enough knowledge to look for the guides they need.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/2021/05-simin-documentation-structure/how-to_guides.png&quot; alt=&quot;how-to_guides&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;You can see the picture above. The left side with bulleted points provides information on how to write better how-to guides. With special emphasis on addressing a specific question or problem, topics in how-to guides can avoid overlapping with other sections, especially tutorials and reference. The right side is the drafted structure proposed by team how-to guides (Vasvi Sood and Abhishek Jaiswal) in week 1. The topics that need further discussion are highlighted in red.&lt;/p&gt;
+
+&lt;p&gt;The first two topics &lt;em&gt;Creat a bot&lt;/em&gt; and &lt;em&gt;Add more functionality to your bot&lt;/em&gt; seemed okay at first glance. However, the two topics violates &lt;em&gt;addressing a specific question&lt;/em&gt;. Instead of addressing particular problems, the two topics are too general and are actually explaining concepts. They are better to be categorized as tutorials.&lt;/p&gt;
+
+&lt;p&gt;The rest of the topics highlighted in red are similar to the first two topics: they seemed perfect at first glance, but have to be carefully handled. In topics about &lt;em&gt;messages&lt;/em&gt;, &lt;em&gt;contacts&lt;/em&gt;, or &lt;em&gt;rooms&lt;/em&gt;, writers will easily falling into the trap of listing down all functions, and try to explain as many as possible. This is out of scope. Instead of providing as many functions as possible, and telling users the software is very comprehensive, how-to guides are to fix specific questions. You don’t need to advertise or provide a dictionary here. The encyclopaedia thing should go into &lt;em&gt;reference guides&lt;/em&gt; section.&lt;/p&gt;
+
+&lt;h3 id=&quot;reference-guides&quot;&gt;Reference guides&lt;/h3&gt;
+
+&lt;p&gt;You can view the reference guides as an encyclopaedia, or wiki. The users will not follow everything in the contents, and will only look for what they need. Therefore, the organization and accuracy of reference guides become very important. You need to make sure that users can easily find the information themselves quickly, and will not get bored and give up during searching.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/2021/05-simin-documentation-structure/reference_guides.png&quot; alt=&quot;reference_guides&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;You can see the picture above. Same as the previous two sections, the left part with bulleted points tells you how to better construct reference guides, and avoid duplicated information with other sections. The right side is the drafted structure proposed by team reference guides (Shraddha Vasant Prasad and Soumi Bardhan) in week 1. The topics that need to pay more attentions are highlighted in red.&lt;/p&gt;
+
+&lt;p&gt;The highlighted topics under &lt;em&gt;API reference&lt;/em&gt; should be careful when you are documenting. People might tend to do too much and provide instructions in these topics. In how-to guides, they also mentioned similar topics but with steps on teaching users how to do. Reference guides should stay on “do nothing but describe”. Leave out other opinions or explanations that could only be a distraction, and focus on clear and complete description.&lt;/p&gt;
+
+&lt;h3 id=&quot;explanation&quot;&gt;Explanation&lt;/h3&gt;
+
+&lt;p&gt;Explanation provides the background information of the software. The topics in here are not directly related with Wechaty, but are very helpful if you want to really master this software.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/2021/05-simin-documentation-structure/explanation.png&quot; alt=&quot;explanation&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Just like the previous three sections, the guidelines of documenting explanation are listed in bulleted points on the left part. Focusing on providing the context, explanation section helps users to better understand what Wechaty is and the concepts of it. With the help of this section, users can not only know what they are doing, and also why they are doing.&lt;/p&gt;
+
+&lt;p&gt;The topics highlighted in red on the right side need to be tackled carefully. There are also similar topic names in tutorials. You should not mix these two sections together. Tutorials provide instructions on how to run the three topics while explanation explains them. Only three topics are highlighted because this section is rather unique. You don’t have to be so worry about as long as you don’t try to teach users how to do things.&lt;/p&gt;</content><author><name>proudofsimin</name></author><category term="article" /><category term="introduction" /><category term="gsod" /><summary type="html">Documentation Structure</summary><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="https://wechaty.js.org/assets/2021/05-simin-documentation-structure/cover_photo.png" /><media:content medium="image" url="https://wechaty.js.org/assets/2021/05-simin-documentation-structure/cover_photo.png" xmlns:media="http://search.yahoo.com/mrss/" /></entry><entry><title type="html">Wechaty local forums and past events</title><link href="https://wechaty.js.org/2021/05/30/wechaty-local-forums-and-past-events/" rel="alternate" type="text/html" title="Wechaty local forums and past events" /><published>2021-05-30T00:00:00+00:00</published><updated>2021-05-30T00:00:00+00:00</updated><id>https://wechaty.js.org/2021/05/30/wechaty-local-forums-and-past-events</id><content type="html" xml:base="https://wechaty.js.org/2021/05/30/wechaty-local-forums-and-past-events/">&lt;h2 id=&quot;timeline&quot;&gt;Timeline&lt;/h2&gt;
+
+&lt;h3 id=&quot;2016&quot;&gt;2016&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;【Talk】Node Party：Talk about chatbot
+    &lt;ul&gt;
+      &lt;li&gt;event intro: &lt;a href=&quot;https://wechaty.js.org/2016/12/07/beijing-nodejs-meetup-party/&quot;&gt;https://wechaty.js.org/2016/12/07/beijing-nodejs-meetup-party/&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;video: &lt;a href=&quot;https://www.youtube.com/watch?v=39TteTtCkd4&amp;amp;list=PL8hd9KDTdarDXf_Rxtr8meKhxtgcXMInh&amp;amp;index=6&amp;amp;t=1883s&quot;&gt;Wechaty 101 - from v0.0 to v0.7&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;blog: &lt;a href=&quot;https://wechaty.js.org/2017/01/06/wechaty-101-presentation/&quot;&gt;https://wechaty.js.org/2017/01/06/wechaty-101-presentation/&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;2017&quot;&gt;2017&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;【Meetup】Wechaty Contributor First Dinner
+    &lt;ul&gt;
+      &lt;li&gt;blog: &lt;a href=&quot;https://wechaty.js.org/2017/04/21/wechaty-meeting-dinner/&quot;&gt;https://wechaty.js.org/2017/04/21/wechaty-meeting-dinner/&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;video: &lt;a href=&quot;https://www.youtube.com/watch?v=3eq8wJfCAWs&amp;amp;list=PL8hd9KDTdarDXf_Rxtr8meKhxtgcXMInh&amp;amp;index=7&quot;&gt;Wechaty Contributor Dinner (for Issue #4)&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;【Meetup】The First Wechaty WWDC Party in 2017
+    &lt;ul&gt;
+      &lt;li&gt;blog: &lt;a href=&quot;https://wechaty.js.org/2017/06/06/the-first-chatie-wwdc-party/&quot;&gt;https://wechaty.js.org/2017/06/06/the-first-chatie-wwdc-party/&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;video: I think &lt;a href=&quot;mailto:zixia@zixia.net&quot;&gt;@李卓桓&lt;/a&gt; have the video, we can looking for him adding this to the list&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;【Talk】How to build chatbot using wechaty
+    &lt;ul&gt;
+      &lt;li&gt;event intro: &lt;a href=&quot;https://www.itdks.com/index.php/Act/apply_upgrade/id/1453/mUid/12576.html&quot;&gt;https://www.itdks.com/index.php/Act/apply_upgrade/id/1453/mUid/12576.html&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;blog: &lt;a href=&quot;https://wechaty.js.org/2017/07/13/how-to-build-a-chatbot/&quot;&gt;https://wechaty.js.org/2017/07/13/how-to-build-a-chatbot/&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;video: &lt;a href=&quot;https://www.itdks.com/Home/Course/detail?id=1318&quot;&gt;https://www.itdks.com/Home/Course/detail?id=1318&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;panel talk: &lt;a href=&quot;https://www.itdks.com/Home/Course/detail?id=1262&quot;&gt;https://www.itdks.com/Home/Course/detail?id=1262&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;【Meetup】Shanghai WWDC - Wechaty Worldwide Developers Conference
+    &lt;ul&gt;
+      &lt;li&gt;blog: &lt;a href=&quot;https://wechaty.js.org/2017/08/28/wechaty-shanghai-meetup/&quot;&gt;https://wechaty.js.org/2017/08/28/wechaty-shanghai-meetup/&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;【Talk】GDG(Google Developer Group) DevFest 2017 Beijing
+    &lt;ul&gt;
+      &lt;li&gt;event intro: &lt;a href=&quot;https://www.itdks.com/Home/Act/apply?mUid=3049982&amp;amp;id=1855&quot;&gt;https://www.itdks.com/Home/Act/apply?mUid=3049982&amp;amp;id=1855&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;blog: &lt;a href=&quot;https://wechaty.js.org/2018/01/25/how-to-build-face-blinder-bot/&quot;&gt;https://wechaty.js.org/2018/01/25/how-to-build-face-blinder-bot/&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;video: &lt;a href=&quot;https://www.itdks.com/Course/detail?id=7379&quot;&gt;https://www.itdks.com/Course/detail?id=7379&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;【Talk】Kubernetes Meetup
+    &lt;ul&gt;
+      &lt;li&gt;event intro:  &lt;a href=&quot;https://www.kubernetes.org.cn/3174.html&quot;&gt;https://www.kubernetes.org.cn/3174.html&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;blog
+        &lt;ul&gt;
+          &lt;li&gt;&lt;a href=&quot;http://rui.juzi.bot/presentation/2017-11-17-docker.html&quot;&gt;http://rui.juzi.bot/presentation/2017-11-17-docker.html&lt;/a&gt;
+​- &lt;a href=&quot;https://zhuanlan.zhihu.com/p/32290407&quot;&gt;https://zhuanlan.zhihu.com/p/32290407&lt;/a&gt;
+​- &lt;a href=&quot;https://blog.csdn.net/ghostcloud2016/article/details/80132999&quot;&gt;https://blog.csdn.net/ghostcloud2016/article/details/80132999&lt;/a&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;video: &lt;a href=&quot;http://2050.itdks.com/Course/detail?id=7751&quot;&gt;http://2050.itdks.com/Course/detail?id=7751&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;2018&quot;&gt;2018&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;【Meetup &amp;amp; Workshop】Wechaty Contributor Dinner with Data Girls
+    &lt;ul&gt;
+      &lt;li&gt;event intro: &lt;a href=&quot;https://www.huodongxing.com/go/techiefestival2018&quot;&gt;https://www.huodongxing.com/go/techiefestival2018&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;blog:
+​- &lt;a href=&quot;https://wechaty.js.org/2018/01/09/all-you-need-to-know-about-chatbot/&quot;&gt;https://wechaty.js.org/2018/01/09/all-you-need-to-know-about-chatbot/&lt;/a&gt;
+​- &lt;a href=&quot;https://wechaty.js.org/2018/01/14/wechaty-contributor-dinner-data-girl/&quot;&gt;https://wechaty.js.org/2018/01/14/wechaty-contributor-dinner-data-girl/&lt;/a&gt;
+​- &lt;a href=&quot;https://wechaty.js.org/2018/01/29/girl-techie-festival/&quot;&gt;https://wechaty.js.org/2018/01/29/girl-techie-festival/&lt;/a&gt;
+​- &lt;a href=&quot;https://wechaty.js.org/2018/02/06/techie-festival-faq/&quot;&gt;https://wechaty.js.org/2018/02/06/techie-festival-faq/&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;video: &lt;a href=&quot;https://www.youtube.com/watch?v=MrlO0gjDe-E&amp;amp;list=PL8hd9KDTdarDXf_Rxtr8meKhxtgcXMInh&amp;amp;index=4&quot;&gt;Wechaty Contributor Dinner - Jan 14, 2018&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;【Meetup】Wechaty Country Wide Developer Conference
+    &lt;ul&gt;
+      &lt;li&gt;blog: &lt;a href=&quot;https://wechaty.js.org/2018/09/15/country-wide-developer-conference/&quot;&gt;https://wechaty.js.org/2018/09/15/country-wide-developer-conference/&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;video: &lt;a href=&quot;https://www.youtube.com/watch?v=QhQPO_2bD48&amp;amp;list=PL8hd9KDTdarDXf_Rxtr8meKhxtgcXMInh&amp;amp;index=3&quot;&gt;Wechaty Contributor Dinner - Sep 15, 2018&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;【Workshop】Build Wechaty Chatbot at OpenSource Factory
+    &lt;ul&gt;
+      &lt;li&gt;video：&lt;a href=&quot;https://www.youtube.com/watch?v=Zgn2QDBENXk&amp;amp;list=PL8hd9KDTdarDXf_Rxtr8meKhxtgcXMInh&amp;amp;index=13&amp;amp;t=1382s&quot;&gt;伊婷：动手实现微信聊天机器人&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;【Workshop】Build Chatbot Using Luis&amp;amp;Wechaty at Intumit at Shanghai Microsoft Tech Summit 2018
+    &lt;ul&gt;
+      &lt;li&gt;event intro: &lt;a href=&quot;https://mp.weixin.qq.com/s?__biz=MzU3OTk2MzA1Nw==&amp;amp;mid=2247485042&amp;amp;idx=1&amp;amp;sn=c5561242099fda2269476240d6686d89&quot;&gt;https://mp.weixin.qq.com/s?__biz=MzU3OTk2MzA1Nw==&amp;amp;mid=2247485042&amp;amp;idx=1&amp;amp;sn=c5561242099fda2269476240d6686d89&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;blog: &lt;a href=&quot;https://wechaty.js.org/2018/10/21/microsoft-tech-summit-chatbot-quick-started/&quot;&gt;https://wechaty.js.org/2018/10/21/microsoft-tech-summit-chatbot-quick-started/&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;2019&quot;&gt;2019&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;【Interview】Microsoft Online Tech Forum
+    &lt;ul&gt;
+      &lt;li&gt;blog: &lt;a href=&quot;https://wechaty.js.org/2020/04/17/microsoft-tech-forum-rui-interview/&quot;&gt;https://wechaty.js.org/2020/04/17/microsoft-tech-forum-rui-interview/&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;video: &lt;a href=&quot;https://www.youtube.com/watch?v=VnI2jl71-Y8&quot;&gt;https://www.youtube.com/watch?v=VnI2jl71-Y8&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;【Talk】Connect to Wechat: Bot Builder Adapter for Wechat Individual Account
+    &lt;ul&gt;
+      &lt;li&gt;blog：&lt;a href=&quot;https://www.bot5.club/talks/botbuilder-wechaty-adapter/&quot;&gt;https://www.bot5.club/talks/botbuilder-wechaty-adapter/&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;event intro： &lt;a href=&quot;https://www.bot5.club/events/seminar-minutes-6/&quot;&gt;https://www.bot5.club/events/seminar-minutes-6/&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;【Meetup】Frist WWDC in Silicon Valley
+    &lt;ul&gt;
+      &lt;li&gt;blog: &lt;a href=&quot;https://wechaty.js.org/2019/08/31/wechaty-wwdc-in-silicon-valley/&quot;&gt;https://wechaty.js.org/2019/08/31/wechaty-wwdc-in-silicon-valley/&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;【Talk】Wechaty in Peking University
+    &lt;ul&gt;
+      &lt;li&gt;blog: &lt;a href=&quot;https://wechaty.js.org/2019/10/18/wechaty-pku-lecture/&quot;&gt;https://wechaty.js.org/2019/10/18/wechaty-pku-lecture/&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;【Talk】Global AI Bootcamp
+    &lt;ul&gt;
+      &lt;li&gt;event intro: The Global AI Bootcamp is a free one-day event organized across the world by local communities that are passionate about artificial intelligence.
+        &lt;ul&gt;
+          &lt;li&gt;Global AI Bootcamp: &lt;a href=&quot;https://globalai.community/global-ai-bootcamp&quot;&gt;https://globalai.community/global-ai-bootcamp&lt;/a&gt;
+​- Global AI Bootcamp Beijing: &lt;a href=&quot;https://globalai.community/global-ai-bootcamp/china-beijing&quot;&gt;https://globalai.community/global-ai-bootcamp/china-beijing&lt;/a&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;blog: &lt;a href=&quot;https://wechaty.js.org/2019/12/20/microsoft-ai-global-training-camp-ends-in-beijing&quot;&gt;https://wechaty.js.org/2019/12/20/microsoft-ai-global-training-camp-ends-in-beijing&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;video: &lt;a href=&quot;https://www.youtube.com/watch?v=bdq8VNuHvVo&amp;amp;list=PL8hd9KDTdarDXf_Rxtr8meKhxtgcXMInh&amp;amp;index=2&amp;amp;t=270s&quot;&gt;Global AI Bootcamp 2019 - Beijing - How to build chatbot from zero to one&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;2020&quot;&gt;2020&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;【Talk】Open-source Wechaty in Python, Go, and Java
+    &lt;ul&gt;
+      &lt;li&gt;video: &lt;a href=&quot;https://www.youtube.com/watch?v=ZX_Pb9fRwS4&amp;amp;list=PL8hd9KDTdarDXf_Rxtr8meKhxtgcXMInh&amp;amp;index=8&quot;&gt;BOT5.Club: Open-source Wechaty in Python, Go, and Java 2020#07&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;blog: I think we need a blog for this event on the &lt;a href=&quot;https://docs.google.com/document/d/1fVCk8qRYc4RKGMf2UY5HOe07hEhPUOpGC34v88GEFJg/edit#heading=h.s1pqhlt89eea&quot;&gt;meeting note&lt;/a&gt;. if anyone interested in doing this…&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;【Meetup】Wechaty Multi-language Developers Meetup
+    &lt;ul&gt;
+      &lt;li&gt;video: &lt;a href=&quot;https://www.youtube.com/watch?v=6VhrXaT7clQ&amp;amp;list=PL8hd9KDTdarDXf_Rxtr8meKhxtgcXMInh&amp;amp;index=10&amp;amp;t=1079s&quot;&gt;Wechaty Multi-language Developers Meetup - May 9, 2020&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;blog: I think we need a blog for this event based on the &lt;a href=&quot;https://docs.google.com/document/d/1fVCk8qRYc4RKGMf2UY5HOe07hEhPUOpGC34v88GEFJg/edit#heading=h.onxkt46yf2l3&quot;&gt;meeting note&lt;/a&gt;. if anyone interested in doing this…&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;【Talk】Microsoft Azure Show: Wechaty Story 2016 - 2020
+    &lt;ul&gt;
+      &lt;li&gt;video: &lt;a href=&quot;https://www.youtube.com/watch?v=YZ130iwcNSE&amp;amp;list=PL8hd9KDTdarDXf_Rxtr8meKhxtgcXMInh&amp;amp;index=11&amp;amp;t=16s&quot;&gt;開源故事(第一期)- HuanLi&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;blog: &lt;a href=&quot;https://wechaty.js.org/2020/05/19/open-source-wechaty-huan-2020/&quot;&gt;https://wechaty.js.org/2020/05/19/open-source-wechaty-huan-2020/&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;【Talk】Microsoft Azure Show: How to build a chatbot deal with investors
+    &lt;ul&gt;
+      &lt;li&gt;video: &lt;a href=&quot;https://www.youtube.com/watch?v=ZYjYAT2g-1Q&amp;amp;list=PL8hd9KDTdarDXf_Rxtr8meKhxtgcXMInh&amp;amp;index=12&quot;&gt;從零開始(第一期)-Rui Li&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;blog: &lt;a href=&quot;https://wechaty.js.org/2020/05/19/qnamaker-juzi-bot-for-investors-rui/&quot;&gt;https://wechaty.js.org/2020/05/19/qnamaker-juzi-bot-for-investors-rui/&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;【Event】Wechaty Plugin System Launch Event
+    &lt;ul&gt;
+      &lt;li&gt;event intro: &lt;a href=&quot;https://mp.weixin.qq.com/s/8ISuUUGO1rZMYOJmpRpKUQ&quot;&gt;https://mp.weixin.qq.com/s/8ISuUUGO1rZMYOJmpRpKUQ&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;video: &lt;a href=&quot;https://www.youtube.com/watch?v=tfGZXoe_aA4&amp;amp;list=PL8hd9KDTdarDXf_Rxtr8meKhxtgcXMInh&amp;amp;index=14&amp;amp;t=395s&quot;&gt;Wechaty Plugin 插件系统发布会 (May 30, 2020)&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;blog: &lt;a href=&quot;https://wechaty.js.org/2020/07/22/wechaty-plugin-milestone/&quot;&gt;https://wechaty.js.org/2020/07/22/wechaty-plugin-milestone/&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;【Event】Wechaty Summer of Code 2020 Talk
+    &lt;ul&gt;
+      &lt;li&gt;event intro:
+​- &lt;a href=&quot;https://isrc.iscas.ac.cn/summer2020&quot;&gt;https://isrc.iscas.ac.cn/summer2020&lt;/a&gt;
+​- &lt;a href=&quot;http://www.iscas.ac.cn/xshd2016/xshy2016/202004/t20200426_5563484.html&quot;&gt;http://www.iscas.ac.cn/xshd2016/xshy2016/202004/t20200426_5563484.html&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;video: &lt;a href=&quot;https://www.youtube.com/watch?v=fMFzCexnDsY&amp;amp;list=PL8hd9KDTdarDXf_Rxtr8meKhxtgcXMInh&amp;amp;index=19&quot;&gt;Wechaty 开源点亮计划暑期2020 宣讲直播（June 8, 2020）&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;blog: We may need a blog if someone interested in this, you can refer &lt;a href=&quot;https://docs.google.com/presentation/d/1ZLH37rQyRgChGqFCUDjA5rbVgBuRkVM4Tys-_ls0gs0/edit#slide=id.g88410f616d_1_20&quot;&gt;this slides&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;Slides: &lt;a href=&quot;https://docs.google.com/presentation/d/1ZLH37rQyRgChGqFCUDjA5rbVgBuRkVM4Tys-_ls0gs0/edit#slide=id.g88410f616d_1_20&quot;&gt;https://docs.google.com/presentation/d/1ZLH37rQyRgChGqFCUDjA5rbVgBuRkVM4Tys-_ls0gs0/edit#slide=id.g88410f616d_1_20&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;【Talk】Multi Language Wechaty Beta Release Announcement!
+    &lt;ul&gt;
+      &lt;li&gt;blog: &lt;a href=&quot;https://wechaty.js.org/2020/06/19/multi-language-wechaty-beta-release/&quot;&gt;https://wechaty.js.org/2020/06/19/multi-language-wechaty-beta-release/&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;video: &lt;a href=&quot;https://www.youtube.com/watch?v=fluenDIHZec&amp;amp;list=PL8hd9KDTdarDXf_Rxtr8meKhxtgcXMInh&amp;amp;index=15&amp;amp;t=6172s&quot;&gt;BETA Release: Multi-language Wechaty Announcement Event (June 19, 2020)&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;【Talk】Microsoft Global AI Bootcamp: How to build a chatbot on WeChat from zero to one.
+    &lt;ul&gt;
+      &lt;li&gt;video: &lt;a href=&quot;https://www.youtube.com/watch?v=Uqtx6UViEro&amp;amp;list=PL8hd9KDTdarDXf_Rxtr8meKhxtgcXMInh&amp;amp;index=55&amp;amp;t=1s&quot;&gt;How to build a chatbot from zero to one on WeChat - 佳芮 李(Jiarui Li)&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;intro: &lt;a href=&quot;https://sessionize.com/s/rui/how_to_build_a_chatbot_from_zero_to/22836&quot;&gt;https://sessionize.com/s/rui/how_to_build_a_chatbot_from_zero_to/22836&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;blog: We need a blog…&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;【Talk】Multi-language Wechaty Meeting: Mocking, Code Quality, Puppet, and Restful API
+    &lt;ul&gt;
+      &lt;li&gt;video: &lt;a href=&quot;https://www.youtube.com/watch?v=qWkv0F_pluQ&amp;amp;list=PL8hd9KDTdarDXf_Rxtr8meKhxtgcXMInh&amp;amp;index=17&quot;&gt;Wechaty Developers’ Meeting - Puppet, Mock, and Restful API (Jul 5, 2020)&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;blog: &lt;a href=&quot;https://wechaty.js.org/2020/07/05/multilanguage-meeting-notes/&quot;&gt;https://wechaty.js.org/2020/07/05/multilanguage-meeting-notes/&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;【Meetup】Wechaty Summer of Code 2020 Kickoff Meeting
+    &lt;ul&gt;
+      &lt;li&gt;video: &lt;a href=&quot;https://www.youtube.com/watch?v=Irfj7W4RYlI&amp;amp;list=PL8hd9KDTdarDXf_Rxtr8meKhxtgcXMInh&amp;amp;index=18&quot;&gt;Wechaty 社区 “暑期2020” 项目启动会, July 15, 2020&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;blog: &lt;a href=&quot;https://wechaty.js.org/2020/07/20/wechaty-soc-kick-off-meeting/&quot;&gt;https://wechaty.js.org/2020/07/20/wechaty-soc-kick-off-meeting/&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;【Talk】Using Wechaty and Wechat Openai make a chatbot
+    &lt;ul&gt;
+      &lt;li&gt;event intro: &lt;a href=&quot;https://mp.weixin.qq.com/s/6HyEZlwWbuRGY9T_KotXEw&quot;&gt;https://mp.weixin.qq.com/s/6HyEZlwWbuRGY9T_KotXEw&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;video: &lt;a href=&quot;https://www.youtube.com/watch?v=PYFg8wYZbvI&amp;amp;list=PL8hd9KDTdarDXf_Rxtr8meKhxtgcXMInh&amp;amp;index=20&quot;&gt;用「Wechaty」和「微信对话开放平台」做个助理 - WWC线上分享 July 16, 2020&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;blog: &lt;a href=&quot;https://wechaty.js.org/2020/07/20/wechaty-openai-agent/&quot;&gt;https://wechaty.js.org/2020/07/20/wechaty-openai-agent/&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;【Workshop】Wechaty Workshop for Puppet Makers: How to make a Puppet for Wechaty
+    &lt;ul&gt;
+      &lt;li&gt;video: &lt;a href=&quot;https://www.youtube.com/watch?v=fbTedVcEEEI&amp;amp;list=PL8hd9KDTdarDXf_Rxtr8meKhxtgcXMInh&amp;amp;index=21&quot;&gt;Wechaty Workshop for Puppet Makers (Aug 4, 2020)&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;blog: &lt;a href=&quot;https://wechaty.js.org/2020/08/05/wechaty-puppet-maker/&quot;&gt;https://wechaty.js.org/2020/08/05/wechaty-puppet-maker/&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;【Meetup】Wechaty in Guangzhou
+    &lt;ul&gt;
+      &lt;li&gt;blog: &lt;a href=&quot;https://wechaty.js.org/2020/08/04/wechaty-guangzhou-gathering/&quot;&gt;https://wechaty.js.org/2020/08/04/wechaty-guangzhou-gathering/&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;【Meetup】 Wechaty Contributor Meetup – Shenzhen&lt;/li&gt;
+      &lt;li&gt;blog: &lt;a href=&quot;https://wechaty.js.org/2020/08/09/wechaty-shenzhen-meetup/&quot;&gt;https://wechaty.js.org/2020/08/09/wechaty-shenzhen-meetup/&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;【Event】Wechaty SoC Midterm Demo Day
+    &lt;ul&gt;
+      &lt;li&gt;video: &lt;a href=&quot;https://www.youtube.com/watch?v=cNSlZez5oY4&amp;amp;list=PL8hd9KDTdarDXf_Rxtr8meKhxtgcXMInh&amp;amp;index=23&quot;&gt;Wechaty SoC Midterm Demo Day (Aug 22, 2020)&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;blog: We need a blog based on the &lt;a href=&quot;https://docs.google.com/document/d/1fVCk8qRYc4RKGMf2UY5HOe07hEhPUOpGC34v88GEFJg/edit#heading=h.5ztnno5qivcb&quot;&gt;meeting note&lt;/a&gt; for this event…&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;【Event】Wechaty Opensource in Nanjing Opensource Summit
+    &lt;ul&gt;
+      &lt;li&gt;video
+        &lt;ul&gt;
+          &lt;li&gt;&lt;a href=&quot;https://www.youtube.com/watch?v=0ARx1cCf5p0&amp;amp;list=PL8hd9KDTdarDXf_Rxtr8meKhxtgcXMInh&amp;amp;index=38&quot;&gt;[VLOG] Wehcaty社区南京开源峰会之旅&lt;/a&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;a href=&quot;https://www.youtube.com/watch?v=DMMGB-32LFM&amp;amp;list=PL8hd9KDTdarDXf_Rxtr8meKhxtgcXMInh&amp;amp;index=29&quot;&gt;开源软件供应链2020峰会-李卓桓-Wechaty的开源之路&lt;/a&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;a href=&quot;https://www.youtube.com/watch?v=ncSWIRtHyAo&amp;amp;list=PL8hd9KDTdarDXf_Rxtr8meKhxtgcXMInh&amp;amp;index=30&quot;&gt;开源软件供应链 2020峰会-吴京京-Multi-Wechaty SDK for Chatbot&lt;/a&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;blog
+        &lt;ul&gt;
+          &lt;li&gt;&lt;a href=&quot;https://wechaty.js.org/2020/12/31/summer-2020-student-developers/&quot;&gt;https://wechaty.js.org/2020/12/31/summer-2020-student-developers/&lt;/a&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;a href=&quot;https://wechaty.js.org/2020/12/08/python-wechaty-open-source-journey/&quot;&gt;https://wechaty.js.org/2020/12/08/python-wechaty-open-source-journey/&lt;/a&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;a href=&quot;https://wechaty.js.org/2020/11/14/summer-2020-wechaty/&quot;&gt;https://wechaty.js.org/2020/11/14/summer-2020-wechaty/&lt;/a&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;a href=&quot;https://wechaty.js.org/2020/11/14/summer-2020-summit-talks/&quot;&gt;https://wechaty.js.org/2020/11/14/summer-2020-summit-talks/&lt;/a&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;a href=&quot;https://wechaty.js.org/2021/02/17/summer-wechaty-nanjing-summit-journey/&quot;&gt;https://wechaty.js.org/2021/02/17/summer-wechaty-nanjing-summit-journey/&lt;/a&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;【Meetup】2020 Wechaty 666: 6 lines of code, 6 platforms, and 6 languages
+    &lt;ul&gt;
+      &lt;li&gt;blog: &lt;a href=&quot;https://wechaty.js.org/2020/12/30/wechaty-2020-dinner-666/&quot;&gt;https://wechaty.js.org/2020/12/30/wechaty-2020-dinner-666/&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;video: &lt;a href=&quot;https://www.youtube.com/watch?v=a9i5YoKiRYY&amp;amp;list=PL8hd9KDTdarDXf_Rxtr8meKhxtgcXMInh&amp;amp;index=31&quot;&gt;2020 Wechaty 666 Developers Meetup, Beijing, Dec 30, 2020&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;【Talk】OSS.Chat, a bridge to the Apache Way in China
+    &lt;ul&gt;
+      &lt;li&gt;blog: Call for a blog… Refer &lt;a href=&quot;https://github.com/kaiyuanshe/oss-bot&quot;&gt;OssChat Github&lt;/a&gt; , &lt;a href=&quot;https://shimo.im/docs/wGHydDxvWGjWKgDK&quot;&gt;Meeting Notes&lt;/a&gt; , and the &lt;a href=&quot;http://wechaty.js.org/docs/showcases/osschat-bot&quot;&gt;doc&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;intro: A presentation from ApacheCon @Home 2020 &lt;a href=&quot;https://www.youtube.com/redirect?event=video_description&amp;amp;redir_token=QUFFLUhqbjc0WXN3b202TFVzV1VhRUpQX05pWDJaYUJpQXxBQ3Jtc0tuT204ZDBmLXVpUktzUmdBZHAya3piLWU3LU1aMzBzeU1xRHZ6cUY3VWkwM3hENE04X1pHQThLTThIbk12SVBtUXFYWjJPRVM1VkxfejdXZUFsSm1zc2syaGNVcFBqUHhyaDZudF9DTDdaVzVMWWI0bw&amp;amp;q=https%3A%2F%2Fapachecon.com%2Facah2020%2F&quot;&gt;https://apachecon.com/acah2020/&lt;/a&gt; The mission of the OSS.Chat project is to bridge the three-way communication and translation barriers between WeChat and other social platforms (future) and GitHub Issues and mailing lists to the open source development community, making ASF’s cultural, technical, and collaborative processes acceptable quickly and easily, rather than stumbling from the start. With Chatbot, an automated process mechanism, developers can more easily share and communicate information about the development of open source projects. In particular, the archiving and secondary induction of open information to the community is one of the things that we think is very meaningful. Through OSS.Chat project, we hope to further promote, disseminate, and even optimize the culture, technology, and collaboration of the Apache project community.&lt;/li&gt;
+      &lt;li&gt;video:&lt;/li&gt;
+      &lt;li&gt;&lt;a href=&quot;https://www.youtube.com/watch?v=KWS4V86heh0&amp;amp;list=PL8hd9KDTdarDXf_Rxtr8meKhxtgcXMInh&amp;amp;index=24&quot;&gt;OSS.Chat - A bridge to the Apache Way in China&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href=&quot;https://www.youtube.com/watch?v=Jle85e6m0fU&amp;amp;list=PL8hd9KDTdarDXf_Rxtr8meKhxtgcXMInh&amp;amp;index=40&quot;&gt;OSS.Chat - A bridge to the Apache Way in China, by Huan, Oct 2020&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href=&quot;https://www.youtube.com/watch?v=HNksCmm_pvY&amp;amp;list=PL8hd9KDTdarDXf_Rxtr8meKhxtgcXMInh&amp;amp;index=41&quot;&gt;Introducing OSS Bot: Sync GitHub Issues with WeChat Groups for Open-source Projects&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;【Event】Wechaty won opensouce award
+    &lt;ul&gt;
+      &lt;li&gt;blog: &lt;a href=&quot;https://wechaty.js.org/2020/12/31/open-source-award-wechaty/&quot;&gt;https://wechaty.js.org/2020/12/31/open-source-award-wechaty/&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;【Event】Wechaty author Huan won 2020 Year 33 opnesouce pioneer
+    &lt;ul&gt;
+      &lt;li&gt;blog: &lt;a href=&quot;https://wechaty.js.org/2020/12/23/open-source-pioneer-huan/&quot;&gt;https://wechaty.js.org/2020/12/23/open-source-pioneer-huan/&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;2021&quot;&gt;2021&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;【Meetup】Wechaty Summer of Code 2021 Kickoff Meeting
+    &lt;ul&gt;
+      &lt;li&gt;blog: &lt;a href=&quot;https://wechaty.js.org/2021/03/14/summer-2021-kick-off-meeting/&quot;&gt;https://wechaty.js.org/2021/03/14/summer-2021-kick-off-meeting/&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;video: &lt;a href=&quot;https://www.youtube.com/watch?v=_RURk6UPlS4&amp;amp;list=PL8hd9KDTdarDXf_Rxtr8meKhxtgcXMInh&amp;amp;index=39&quot;&gt;Kick off meeting for Summer of Wechaty 2021, Feb 18, 2021&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;【Meetup】Wechaty GSoD’21 Technical Writers Meetup
+    &lt;ul&gt;
+      &lt;li&gt;video: &lt;a href=&quot;https://www.youtube.com/watch?v=hTkM_XPpFfU&amp;amp;list=PL8hd9KDTdarDXf_Rxtr8meKhxtgcXMInh&amp;amp;index=43&amp;amp;t=519s&quot;&gt;Wechaty ![❤] Google Season of Docs: Kick-off meeting with 20 Technical Writers!&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;blog:
+    &lt;ul&gt;
+      &lt;li&gt;&lt;a href=&quot;https://wechaty.js.org/2021/05/08/gsod-2021-selected-technical-writers/&quot;&gt;https://wechaty.js.org/2021/05/08/gsod-2021-selected-technical-writers/&lt;/a&gt;​&lt;/li&gt;
+      &lt;li&gt;&lt;a href=&quot;https://wechaty.js.org/2021/04/30/google-season-of-docs/&quot;&gt;https://wechaty.js.org/2021/04/30/google-season-of-docs/&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;【Meetup】Wechaty Contributor Beijing Meetup
+    &lt;ul&gt;
+      &lt;li&gt;blog: &lt;a href=&quot;https://wechaty.js.org/2021/04/05/wechaty-contributor-meetup/&quot;&gt;https://wechaty.js.org/2021/04/05/wechaty-contributor-meetup/&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;【Event】Paddle Paddle &amp;amp; Wechaty AI Chatbot
+    &lt;ul&gt;
+      &lt;li&gt;blog: &lt;a href=&quot;https://wechaty.js.org/2021/04/22/wechaty-with-paddlepaddle/&quot;&gt;https://wechaty.js.org/2021/04/22/wechaty-with-paddlepaddle/&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;【Talk】Opensource Wechaty
+    &lt;ul&gt;
+      &lt;li&gt;intro: &lt;a href=&quot;https://www.startupgrind.com/events/details/startup-grind-beijing-presents-we-are-hosting-jiarui-li/&quot;&gt;https://www.startupgrind.com/events/details/startup-grind-beijing-presents-we-are-hosting-jiarui-li/&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;blog: We need a blog…&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;reference&quot;&gt;Reference&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://wechaty.js.org/blog/&quot;&gt;Wechaty Blog&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://photos.google.com/share/AF1QipOWKUfUkjw-VzE0skrjmCwbwIWwuBiI7Li4UCbdXH62n8iH2ITnvDbPTsx4eBl8dw?key=cy1NdWFoUGpXanVmczVHSm84TVg1LXJWeW5HTDhR&amp;amp;pli=1&quot;&gt;Photo Album&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.youtube.com/playlist?list=PL8hd9KDTdarDXf_Rxtr8meKhxtgcXMInh&quot;&gt;Wechaty Youtube Playlist&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://docs.google.com/document/d/1fVCk8qRYc4RKGMf2UY5HOe07hEhPUOpGC34v88GEFJg/edit&quot;&gt;Meeting Notes&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://docs.google.com/presentation/d/1eRNrKnCpdnsmplTwtZzmtGZgrPoNCmOnitmHKVc6iVU/edit#slide=id.g601a3d9d6c_0_33&quot;&gt;Brief Workshop&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://docs.google.com/presentation/d/1eRNrKnCpdnsmplTwtZzmtGZgrPoNCmOnitmHKVc6iVU/edit#slide=id.g8568e8a985_3_8&quot;&gt;Open Source Wechaty Slides&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/wechaty/PMC#wechaty-committers&quot;&gt;Wechaty Commiters Talk&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</content><author><name>lijiarui</name></author><category term="article" /><category term="blog" /><category term="event" /><category term="talk" /><category term="workshop" /><category term="meetup" /><category term="interview" /><category term="news" /><summary type="html">Timeline</summary><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="https://wechaty.js.org/assets/2021/05-wechaty-local-forums-and-past-events/community-events.jpeg" /><media:content medium="image" url="https://wechaty.js.org/assets/2021/05-wechaty-local-forums-and-past-events/community-events.jpeg" xmlns:media="http://search.yahoo.com/mrss/" /></entry><entry><title type="html">如何用paddlepaddle及wechaty制作熊猫头表情生成机器人</title><link href="https://wechaty.js.org/2021/05/24/how-to-build-a-panda-face-generator-with-paddlepaddle/" rel="alternate" type="text/html" title="如何用paddlepaddle及wechaty制作熊猫头表情生成机器人" /><published>2021-05-24T00:00:00+00:00</published><updated>2021-05-24T00:00:00+00:00</updated><id>https://wechaty.js.org/2021/05/24/how-to-build-a-panda-face-generator-with-paddlepaddle</id><content type="html" xml:base="https://wechaty.js.org/2021/05/24/how-to-build-a-panda-face-generator-with-paddlepaddle/">&lt;blockquote&gt;
+  &lt;p&gt;作者: &lt;a href=&quot;https://github.com/ninetailskim/&quot;&gt;ninetailskim&lt;/a&gt;，始于兴趣 陷于技术 忠于瞎搞&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&quot;谁是这篇博客读者&quot;&gt;谁是这篇博客读者&lt;/h2&gt;
+
+&lt;p&gt;很高兴能分享前段时间折腾的小项目，一只熊猫头表情生成机器人。因为本熊是个很热爱meme文化的人，而在聊天过程中，我总是需要表情包来支撑起我匮乏的语言表达能力以及抒发我无法通过文字表达的感情。这次使用wechaty和paddlepaddle制作了一个根据人像生成对应熊猫头的表情包制作机器人。经本人不正经的测试，本表情包制作机器人可以给你的对话增加更多的乐趣，聊天室内外充满了快活的空气~&lt;/p&gt;
+
+&lt;p&gt;你可以在这里看到大致的效果&lt;/p&gt;
+
+&lt;div style=&quot;
+    position: relative;
+    padding-bottom: 70%;
+    padding-top:30px;
+    height:0;
+    overflow:hidden;
+&quot;&gt;
+  &lt;iframe src=&quot;https://player.bilibili.com/player.html?bvid=BV1NK4y1N7m5&amp;amp;high_quality=1&quot; allowfullscreen=&quot;&quot; webkitallowfullscreen=&quot;&quot; frameborder=&quot;0&quot; style=&quot;
+      position: absolute;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+    &quot;&gt;
+&lt;/iframe&gt;
+
+&lt;/div&gt;
+
+&lt;h2 id=&quot;项目介绍和使用&quot;&gt;项目介绍和使用&lt;/h2&gt;
+
+&lt;p&gt;项目的github仓库&lt;a href=&quot;https://github.com/ninetailskim/PandaFaceGenerator&quot;&gt;地址&lt;/a&gt;
+在刚想到将wechaty与paddlepaddle结合的时候，其实是有很多的想法的，除了这个表情包生成器，还有游戏，交互写故事等想法，最后选择先做了这个表情包生成器，因为它足够简单却有趣，作为第一个试水作品最合适了。
+简单介绍这个机器人的功能：
+1.接收到人脸照片/视频会提取人脸,制作对应的熊猫头表情包
+2.输入文字会给表情包的底部加上想要的文字&lt;/p&gt;
+
+&lt;p&gt;本项目使用的是没有使用token的网页登录的方式。因为一些个人原因整个项目分为两个大部分，一个是js端，用于分类消息类型，并向服务器端发送请求，这部分为wechaty的使用；另一个是django服务器端，负责处理js端发来的请求，制作表情包并返回结果，这部分则为paddlepaddle的使用。本项目基本上是采取解决不了问题就躲开问题的处理方式，所以有些地方的处理为了快速实践出功能，而采取了一些“非人类”的解决方法，还请大佬们见谅嘿嘿。&lt;/p&gt;
+
+&lt;p&gt;JS端，wechaty-getting-started目录下：
+set WECHATY_LOG=verbose
+set WECHATY_PUPPET=wechaty-puppet-wechat
+npx ts-node examples/advanced/Panda-Face-bot.js&lt;/p&gt;
+
+&lt;p&gt;Django端，PDjango目录下：
+python manage.py runserver 0.0.0.0:8080&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;框架图&lt;/strong&gt;
+&lt;img src=&quot;/assets/2021/05-how-to-build-a-panda-face-generator-with-paddlepaddle/framework.png&quot; alt=&quot;框架图：分成wehcaty和django两部分&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;wechaty部分&quot;&gt;wechaty部分&lt;/h2&gt;
+
+&lt;p&gt;前面说的“个人原因”其实是因为python版本的wechaty我一开始没搞定，所以不得已采用“非人类”方式将整体架构拆开为两部分。当熟悉python版本后，完全可以把整个项目用python实践出来。
+Wechaty端,我直接魔改的官方的advance例子中的media-file-bot.js文件,增加了两个模块:
+&lt;strong&gt;1.网络请求模块,因为我需要调用自己的django服务器,所以写了这一个模块,给自己的端口上发请求,然后处理返回的结果,返回表情包,或者告诉用户我没有在你发送的图片/视频中发现人脸&lt;/strong&gt;
+网络请求部分，为一个get请求。用于发送文本和图像信息。因为wechaty端和django端都部署在了本地，所以图像的信息只是图像在本地的保存地址。对于get请求响应的处理则更简单，django端在顺利处理图像后同样会返回图片的本地地址，wechaty端只需构建filebox，然后发送即可。&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;2.保存文字的模块,要针对不同的信息发出者,保存其对应的文字,结果保存在一个sender.json文件中&lt;/strong&gt;
+这个部分是为了给我们的表情包加上文字。即是当一个用户发送一个文本消息时，则将用户id和这个文本作为一个键值对保存起来，在收到图片消息后，根据图片消息的id来找到其对应的文本消息，将这两者打包发送给django服务器端。但是这里遇到的一个问题：这个请求不太好解析中文字符。服务端受到的text会变成乱码，所以这里的“非人类”的处理方式是当收到文本消息时将键值对保存到json文件里。而在发送请求时，则发送用户的id（用户的id是没有中文字符的）；在服务端则根据id从json文件里查找id对应的文本。&lt;/p&gt;
+
+&lt;h2 id=&quot;服务器端部分&quot;&gt;服务器端部分&lt;/h2&gt;
+
+&lt;p&gt;django的部分非常的简单,在view中添加一个处理get请求的方法就好,这部分处理一下请求中的数据,根据数据去调用pandaFace脚本就好。下面主动点讲一下pandaFace脚本。&lt;/p&gt;
+
+&lt;p&gt;pandaFace脚本则是处理图像的主文件,提供了处理图片和视频的方法.大致的流程如下：
+&lt;strong&gt;1.熊猫头表情包的人脸去除和人脸定位&lt;/strong&gt;
+这里需要使用paddlehub中的两个模型，一个是ace2p，一个是face_landmark_localization。通过这两个模型来获取作为模板的原表情中“人脸”的位置，我们之后处理用户发来的人脸，要根据这个标准来缩放，并绘制到指定位置上。
+&lt;strong&gt;2.接收到的图片的人脸的提取和缩放,处理到灰度图,适当添加对比和亮度&lt;/strong&gt;
+同样使用上述的两个模型处理用户发来的肖像照，然后进入我花费时间最长的步骤——调整颜色。
+因为光照等原因，把图像转为灰度图的任务始终无法达到理想的效果。这里尝试了亮度、对比度、直方图等统一的方式做了一些处理，大家也可以进行测试。另外我觉得最可行的方法是直方图匹配，这方面值得继续改进。
+&lt;strong&gt;&lt;em&gt;亮度调节对比&lt;/em&gt;&lt;/strong&gt;
+&lt;img src=&quot;/assets/2021/05-how-to-build-a-panda-face-generator-with-paddlepaddle/bright.png&quot; alt=&quot;亮度对比图&quot; /&gt;
+&lt;strong&gt;&lt;em&gt;对比度调节对比&lt;/em&gt;&lt;/strong&gt;
+&lt;img src=&quot;/assets/2021/05-how-to-build-a-panda-face-generator-with-paddlepaddle/contract.png&quot; alt=&quot;对比度对比图&quot; /&gt;
+&lt;strong&gt;&lt;em&gt;gamma方式调节histogram调节对比&lt;/em&gt;&lt;/strong&gt;
+&lt;img src=&quot;/assets/2021/05-how-to-build-a-panda-face-generator-with-paddlepaddle/gamma.png&quot; alt=&quot;gamma对比图&quot; /&gt;
+这部分试了很多个参数,但是对于不同的图片不太好做到统一,所以想到了直方图匹配(histogram match),但是这部分实验的图找不到了,之后补上,直方图匹配的代码也在脚本中提供了,但是默认并没有开启。
+&lt;strong&gt;&lt;em&gt;直方图匹配&lt;/em&gt;&lt;/strong&gt;的方法可以把人脸映射到和原版的表情包大概同一个色调,但是缺点是,直方图匹配的方式会损失细节,这样会出现跃迁式的像素变化,很丑,所以可能采用直方图匹配之后要做更多的处理。&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;3.把2中的人脸根据1中的定位,贴到1中的熊猫头上&lt;/strong&gt;
+opencv的简单操作，嘿嘿~
+&lt;strong&gt;4.添加文字&lt;/strong&gt;
+针对文字的方面,也通过归一化图片尺寸和一定的规则即可简单的添加在图片上。&lt;/p&gt;
+
+&lt;h2 id=&quot;总结改进完善方向&quot;&gt;总结+改进完善方向&lt;/h2&gt;
+
+&lt;p&gt;最终版本中没有开启直方图匹配(提供了这部分的代码,只是没有开启),但是还是可以尝试,直方图匹配后的结果图像”质量”更差,&lt;del&gt;但是表情包的精髓不就是糊吗?糊到一堆水印,糊到满是包浆。&lt;/del&gt;
+最后统一采用了2.2的对比和3的亮度,如果要改进的话,应该还是可以提升一下直方图匹配的效果。
+除了人脸处理模块,其他的部分需要改进的大概是舍弃掉这种js+django服务器的模式,这样的效果有点慢。在熟悉wechaty的python版本后，则可以直接抛弃这一方法。
+在频繁给django发送请求后,server端的cpu和内存”爆炸”,这部分不确定是django的问题还是Paddlehub的问题,目前这个问题似乎没有再出现(真是让人迷惑)。&lt;/p&gt;</content><author><name>ninetailskim</name></author><category term="article" /><category term="blog" /><category term="study" /><category term="introduction" /><summary type="html">作者: ninetailskim，始于兴趣 陷于技术 忠于瞎搞</summary><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="https://wechaty.js.org/assets/2021/05-how-to-build-a-panda-face-generator-with-paddlepaddle/shut-up-and-kiss-me.jpg" /><media:content medium="image" url="https://wechaty.js.org/assets/2021/05-how-to-build-a-panda-face-generator-with-paddlepaddle/shut-up-and-kiss-me.jpg" xmlns:media="http://search.yahoo.com/mrss/" /></entry><entry><title type="html">GSoD’21 Second Meeting</title><link href="https://wechaty.js.org/2021/05/23/gsod-2021-second-meeting/" rel="alternate" type="text/html" title="GSoD’21 Second Meeting" /><published>2021-05-23T00:00:00+00:00</published><updated>2021-05-23T00:00:00+00:00</updated><id>https://wechaty.js.org/2021/05/23/gsod-2021-second-meeting</id><content type="html" xml:base="https://wechaty.js.org/2021/05/23/gsod-2021-second-meeting/">&lt;h2 id=&quot;google-season-of-docs21-week-1-meeting&quot;&gt;Google Season of Docs’21 Week 1 meeting&lt;/h2&gt;
+
+&lt;h3 id=&quot;meeting-summary&quot;&gt;Meeting Summary&lt;/h3&gt;
+
+&lt;p&gt;It was the second meeting of the GSoD’21 participants, everyone has started their work and have pushed more than one PRs on GitHub.&lt;/p&gt;
+
+&lt;p&gt;In this meeting, firstly every participant gave his week summary and informed the community about their plans for the upcoming week. After that, we had a bit of discussion about the vision for the Wechaty. Following that Simin led a discussion about style mistakes that are being frequently made in the PRs, next she introduces us to a follow-up checklist. Later we had a suggestions/Q&amp;amp;A session, and at last, we took a lovely group photo.&lt;/p&gt;
+
+&lt;div style=&quot;
+    position: relative;
+    padding-bottom: 56.25%;
+    padding-top:30px;
+    height:0;
+    overflow:hidden;
+&quot;&gt;
+  &lt;iframe src=&quot;https://www.youtube.com/embed/rnpf520OTyI&quot; allowfullscreen=&quot;&quot; webkitallowfullscreen=&quot;&quot; frameborder=&quot;0&quot; style=&quot;
+      position: absolute;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+    &quot;&gt;
+&lt;/iframe&gt;
+
+&lt;/div&gt;
+
+&lt;h3 id=&quot;attendees&quot;&gt;Attendees&lt;/h3&gt;
+
+&lt;p&gt;Total 13 attendees attended the meeting. They are:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Rohitesh Jain, Volunteer (UTC + 5:30)&lt;/li&gt;
+  &lt;li&gt;Sajen Sarvajith, Reconstruct Landing page writer (UTC + 5:30)&lt;/li&gt;
+  &lt;li&gt;Abhishek Jaiswal, How-to-guide section writer (UTC + 05:30)&lt;/li&gt;
+  &lt;li&gt;Simin Liao, Volunteer (+8:00)&lt;/li&gt;
+  &lt;li&gt;Mukosa Joseph mawa, Introductions and Explanations section writer (UTC +03:00)&lt;/li&gt;
+  &lt;li&gt;Rajiv Ranjan Singh, Improve the gRPC and OpenAPI ecosystem writer, rajivperfect007@gmail.com, IST (UTC +5:30)&lt;/li&gt;
+  &lt;li&gt;Souvik Biswas, Create easy to learn tutorials for beginner users writer, sbis1999@gmail.com (UTC +05:30)&lt;/li&gt;
+  &lt;li&gt;Soumi Bardhan, Improve References section writer (UTC + 5:30)&lt;/li&gt;
+  &lt;li&gt;Shraddha Vasant Prasad,Improve References sectio writer (UTC + 5:30)&lt;/li&gt;
+  &lt;li&gt;Shwetal Soni, Create easy to learn tutorials for beginners users writer (UTC +05:30)&lt;/li&gt;
+  &lt;li&gt;Chris Estepa,  Introduction and Explanations sections writer (UTC +08:00)&lt;/li&gt;
+  &lt;li&gt;Vasvi Sood, How to guides, contactvasvisood@gmail.com writer (UTC + 5:30)&lt;/li&gt;
+  &lt;li&gt;Arnab Saha, Reconstruction of Landing page with value propositions writer (UTC + 5:30)&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h4 id=&quot;notes&quot;&gt;Notes&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Arnab Saha joined a bit late but, everyone attended the meeting.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/2021/05-gsod-2021-second-meeting/gsod-meeting2-teasor.webp&quot; alt=&quot;Google Season of Docs 2021: Wechaty GSoD'21 Group Photo&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;agendas&quot;&gt;Agendas&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://youtu.be/rnpf520OTyI?t=18&quot;&gt;0:00:18&lt;/a&gt; 1. Week Summaries&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://youtu.be/rnpf520OTyI?t=615&quot;&gt;0:10:15&lt;/a&gt; 2. Discussion about the vision of Wechaty&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://youtu.be/rnpf520OTyI?t=795&quot;&gt;0:13:15&lt;/a&gt; 3. Style mistakes frequently made&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://youtu.be/rnpf520OTyI?t=1093&quot;&gt;0:18:13&lt;/a&gt; 4. Follow-up Checklist&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://youtu.be/rnpf520OTyI?t=1195&quot;&gt;0:19:55&lt;/a&gt; 5. Questions &amp;amp; Comments&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;You can learn more from our &lt;a href=&quot;https://docs.google.com/document/d/1fVCk8qRYc4RKGMf2UY5HOe07hEhPUOpGC34v88GEFJg/edit#heading=h.edr3nzd8l43b&quot;&gt;meeting notes&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&quot;meeting-outcomes&quot;&gt;Meeting Outcomes&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;The community got to know about the progress and plans of the members&lt;/li&gt;
+  &lt;li&gt;Chris and Joseph need more time for coming up with a vision, it’s decided that they will come up with a vision soon&lt;/li&gt;
+  &lt;li&gt;Simin made tech writers aware of their style mistakes&lt;/li&gt;
+  &lt;li&gt;Tech writers received information about the follow-up checklist&lt;/li&gt;
+  &lt;li&gt;It’s clear that tech writers have no doubts regarding the performance bonus&lt;/li&gt;
+  &lt;li&gt;Simin will be coming up with a blog post regarding the documentation styles, guidelines &amp;amp; rules&lt;/li&gt;
+  &lt;li&gt;Feedback has been collected for the next volunteers meeting&lt;/li&gt;
+&lt;/ul&gt;</content><author><name>rohitesh-kumar-jain</name></author><category term="gsod" /><category term="google" /><category term="gsod" /><category term="event" /><category term="gsod" /><category term="2021" /><category term="zoom" /><category term="docs" /><summary type="html">Google Season of Docs’21 Week 1 meeting</summary><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="https://wechaty.js.org/assets/2021/05-gsod-2021-second-meeting/gsod-meeting2-teasor.webp" /><media:content medium="image" url="https://wechaty.js.org/assets/2021/05-gsod-2021-second-meeting/gsod-meeting2-teasor.webp" xmlns:media="http://search.yahoo.com/mrss/" /></entry><entry><title type="html">GSoD ‘21 proposal for Improve the gRPC and OpenAPI ecosystem</title><link href="https://wechaty.js.org/2021/05/18/gsod-2021-proposal-for-improve-the-grpc-and-openapi-ecosystem/" rel="alternate" type="text/html" title="GSoD ‘21 proposal for Improve the gRPC and OpenAPI ecosystem" /><published>2021-05-18T00:00:00+00:00</published><updated>2021-05-18T00:00:00+00:00</updated><id>https://wechaty.js.org/2021/05/18/gsod-2021-proposal-for-improve-the-grpc-and-openapi-ecosystem</id><content type="html" xml:base="https://wechaty.js.org/2021/05/18/gsod-2021-proposal-for-improve-the-grpc-and-openapi-ecosystem/">&lt;h2 id=&quot;about-me&quot;&gt;About me&lt;/h2&gt;
+
+&lt;p&gt;I considered myself a Polymath. I believe in rigorous and intuitive learning. Spend the majority of the time exploring different types of algorithms and contributing to open source. My interest lies in the fields of Algorithms, Computational Science, and Distributed Computing.&lt;/p&gt;
+
+&lt;p&gt;I have completed GSoD ‘20 with gRPC-Gateway. My project was on Refactoring the Existing Docs Site of gRPC-Gateway.&lt;/p&gt;
+
+&lt;p&gt;My Google Season of Docs ‘20 project report: &lt;a href=&quot;https://github.com/iamrajiv/GSoD-2020/blob/master/GSoD_2020_Project_Report.md&quot;&gt;https://github.com/iamrajiv/GSoD-2020/blob/master/GSoD_2020_Project_Report.md&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h2 id=&quot;project-proposal-video-presentation&quot;&gt;Project Proposal Video Presentation&lt;/h2&gt;
+
+&lt;div style=&quot;
+    position: relative;
+    padding-bottom: 56.25%;
+    padding-top:30px;
+    height:0;
+    overflow:hidden;
+&quot;&gt;
+  &lt;iframe src=&quot;https://www.youtube.com/embed/bSnKbzZYDco&quot; allowfullscreen=&quot;&quot; webkitallowfullscreen=&quot;&quot; frameborder=&quot;0&quot; style=&quot;
+      position: absolute;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+    &quot;&gt;
+&lt;/iframe&gt;
+
+&lt;/div&gt;
+
+&lt;h2 id=&quot;introduction&quot;&gt;Introduction&lt;/h2&gt;
+
+&lt;p&gt;This is the project proposal for &lt;strong&gt;Improve the gRPC and OpenAPI ecosystem&lt;/strong&gt; on which I will be working as a part of Google Season of Docs 2021. I have proposed my timeline to complete this work during a span of &lt;strong&gt;9 weeks&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;The user docs site is designed to assist end-users in using a product or service. The excellent user docs site is significant because it provides an avenue for users to learn how to use the software, its features, tips, tricks, and resolve common problems encountered when using the software. It also reduces support costs and is part of the corporate identity of the product. The excellent user docs site is a sign of the healthiness of the product, the developer team. Without a good user docs site, a user may not know how to do the above things effectively and efficiently. User docs site can play a pivotal role in ensuring a product’s success because excellent communication is and will always be at the heart of any business or development. Fantastic documentation takes that communication and puts it in a manageable framework that everyone can access for success.&lt;/p&gt;
+
+&lt;p&gt;Wechaty has two subsystems for providing the gRPC support: one is &lt;a href=&quot;https://github.com/wechaty/grpc&quot;&gt;wechaty/wechaty-grpc&lt;/a&gt;, the other is &lt;a href=&quot;https://github.com/wechaty/openapi&quot;&gt;wechaty/openapi&lt;/a&gt;. The related docs page is mainly at &lt;a href=&quot;http://wechaty.js.org/docs/polyglot/openapi/&quot;&gt;Polyglot/OpenAPI&lt;/a&gt; as well as other pages that have some OpenAPI associated docs.&lt;/p&gt;
+
+&lt;p&gt;However, the Wechaty user documentation for gRPC and OpenAPI is currently outdated and incomplete. Therefore, there should be an improvement in both code and documentation.&lt;/p&gt;
+
+&lt;h2 id=&quot;project-goals&quot;&gt;Project Goals&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Improving all OpenAPI related documentation of docs website &lt;a href=&quot;https://wechaty.js.org/docs/&quot;&gt;https://wechaty.js.org/docs/&lt;/a&gt;, especially &lt;a href=&quot;http://wechaty.js.org/docs/polyglot/openapi/&quot;&gt;Polyglot/OpenAPI&lt;/a&gt;:&lt;/p&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;Adding more details in the Getting Started section.&lt;/li&gt;
+      &lt;li&gt;Adding more Blogs.&lt;/li&gt;
+      &lt;li&gt;Updating the History section and fetching all contents of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CHANGELOG.md&lt;/code&gt; file from OpenAPI repository using a script or redirecting to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CHANGELOG.md&lt;/code&gt; file.&lt;/li&gt;
+      &lt;li&gt;Adding learning resources section.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Improving repository documentation for both &lt;a href=&quot;https://github.com/wechaty/grpc&quot;&gt;wechaty/wechaty-grpc&lt;/a&gt; and &lt;a href=&quot;https://github.com/wechaty/openapi&quot;&gt;wechaty/openapi&lt;/a&gt;:&lt;/p&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;Adding &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CHANGELOG.md&lt;/code&gt; file.&lt;/li&gt;
+      &lt;li&gt;Removing the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;HISTORY&lt;/code&gt; section from the gRPC README and moving to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CHANGELOG.md&lt;/code&gt; file.&lt;/li&gt;
+      &lt;li&gt;Breaking the READMEs into sub-topic like Usage, Installation, Contributing, and Resources, etc.&lt;/li&gt;
+      &lt;li&gt;Adding &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CONTRIBUTING.md&lt;/code&gt; file.&lt;/li&gt;
+      &lt;li&gt;Adding Developer Certificate of Origin (DCO) GitHub action.&lt;/li&gt;
+      &lt;li&gt;Adding a learning resources section about third parties library and frameworks like gRPC, gRPC-Gateway, and Protocol Buffers, etc.&lt;/li&gt;
+      &lt;li&gt;Solving all issues with labels documentation like &lt;a href=&quot;https://github.com/wechaty/grpc/issues/65&quot;&gt;grpc MessageType doesn’t match that in ts-wechaty&lt;/a&gt;, etc.&lt;/li&gt;
+      &lt;li&gt;Improving the code when necessary for improving the docs in the repository &lt;a href=&quot;https://github.com/wechaty/grpc&quot;&gt;wechaty/wechaty-grpc&lt;/a&gt; and &lt;a href=&quot;https://github.com/wechaty/openapi&quot;&gt;wechaty/openapi&lt;/a&gt;.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Miscellaneous:&lt;/p&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;Adding more FAQ entries.&lt;/li&gt;
+      &lt;li&gt;Format all markdown files using Prettier.&lt;/li&gt;
+      &lt;li&gt;Creating logos for gRPC and OpenAPI repository and refactoring other architecture diagrams if necessary.&lt;/li&gt;
+      &lt;li&gt;Checking and fixing indentations, grammatical errors, typographical errors, and broken links across all the files, including previous and new documentations.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;project-timeline&quot;&gt;Project Timeline&lt;/h2&gt;
+
+&lt;h3 id=&quot;community-bonding-may-8---may-17-2021&quot;&gt;Community Bonding (May 8 - May 17, 2021)&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Zoom meeting schedule agreed.&lt;/li&gt;
+  &lt;li&gt;Focus in the first two weeks before the start of the project will be on:
+    &lt;ul&gt;
+      &lt;li&gt;Working through existing documentation and note gaps areas.&lt;/li&gt;
+      &lt;li&gt;Putting together a timeline for the approximately three months of the project, with weekly milestones.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;week-1-may-18---may-24-2021&quot;&gt;Week 1 (May 18 - May 24, 2021)&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Getting familiar with Wechaty projects.&lt;/li&gt;
+  &lt;li&gt;Going through all the existing contents and documentation based on gRPC and OpenAPI.&lt;/li&gt;
+  &lt;li&gt;Listing out things missing in gRPC and OpenAPI documentation and having a discussion with mentors.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;week-2-may-25---may-31-2021&quot;&gt;Week 2 (May 25 - May 31, 2021)&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Adding notes to the documentation guidelines in the process of learning and installing gRPC and OpenAPI.&lt;/li&gt;
+  &lt;li&gt;Adding more details in the Getting Started section.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;week-3-june-1---june-7-2021&quot;&gt;Week 3 (June 1 - June 7, 2021)&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Adding more Blogs.&lt;/li&gt;
+  &lt;li&gt;Updating the History section and fetching all contents of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CHANGELOG.md&lt;/code&gt; file from OpenAPI repository using a script or redirecting to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CHANGELOG.md&lt;/code&gt; file.&lt;/li&gt;
+  &lt;li&gt;Adding learning resources section.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;week-4-june-8---june-14-2021&quot;&gt;Week 4 (June 8 - June 14, 2021)&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Adding &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CHANGELOG.md&lt;/code&gt; file.&lt;/li&gt;
+  &lt;li&gt;Removing the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;HISTORY&lt;/code&gt; section from the gRPC README and moving to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CHANGELOG.md&lt;/code&gt; file.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;week-5-june-15---june-21-2021&quot;&gt;Week 5 (June 15 - June 21, 2021)&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Breaking the READMEs into sub-topic like Usage, Installation, Contributing, and Resources, etc.&lt;/li&gt;
+  &lt;li&gt;Adding &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CONTRIBUTING.md&lt;/code&gt; file.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;week-6-june-22---june-28-2021&quot;&gt;Week 6 (June 22 - June 28, 2021)&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Adding Developer Certificate of Origin (DCO) GitHub action.&lt;/li&gt;
+  &lt;li&gt;Adding a learning resources section about third parties library and frameworks like gRPC, gRPC-Gateway, and Protocol Buffers, etc.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;week-7-june-29---july-4-2021&quot;&gt;Week 7 (June 29 - July 4, 2021)&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Solving all issues with labels documentation like &lt;a href=&quot;https://github.com/wechaty/grpc/issues/65&quot;&gt;grpc MessageType doesn’t match that in ts-wechaty&lt;/a&gt;, etc.&lt;/li&gt;
+  &lt;li&gt;Improving the code when necessary for improving the docs in the repository &lt;a href=&quot;https://github.com/wechaty/grpc&quot;&gt;wechaty/wechaty-grpc&lt;/a&gt; and &lt;a href=&quot;https://github.com/wechaty/openapi&quot;&gt;wechaty/openapi&lt;/a&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;week-8-july-5---july-11-2021&quot;&gt;Week 8 (July 5 - July 11, 2021)&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Adding more FAQ entries.&lt;/li&gt;
+  &lt;li&gt;Format all markdown files using Prettier.&lt;/li&gt;
+  &lt;li&gt;Creating logos for gRPC and OpenAPI repository and refactoring other architecture diagrams if necessary.&lt;/li&gt;
+  &lt;li&gt;Checking and fixing indentations, grammatical errors, typographical errors, and broken links across all the files, including previous and new documentations.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;week-9-july-12---july-18-2021&quot;&gt;Week 9 (July 12 - July 18, 2021)&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Finalizing the project deliverables and refactor the code, if any, based on the feedback.&lt;/li&gt;
+  &lt;li&gt;Making the project report.&lt;/li&gt;
+  &lt;li&gt;Finalizing and submitting the project report.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;references&quot;&gt;References&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://developers.google.com/season-of-docs&quot;&gt;Season of Docs Website&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/wechaty/openapi&quot;&gt;wechaty/openapi&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/wechaty/grpc&quot;&gt;wechaty/wechaty-grpc&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;links&quot;&gt;Links&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/iamrajiv/GSoD-2021/blob/master/GSoD_2021_Project_Proposal.md&quot;&gt;GSoD 2021 Project Proposal&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://gsod-2021-project-proposal-presentation.netlify.app&quot;&gt;GSoD 2021 Project Proposal Presentation&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/iamrajiv/GSoD-2021&quot;&gt;GSoD 2021 Repository&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</content><author><name>iamrajiv</name></author><category term="gsod" /><category term="google" /><category term="grpc" /><category term="gsod" /><category term="openapi" /><category term="proposal" /><summary type="html">About me</summary><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="https://wechaty.js.org/assets/2021/05-gsod-2021-proposal-for-improve-the-grpc-and-openapi-ecosystem/gsod-2021.png" /><media:content medium="image" url="https://wechaty.js.org/assets/2021/05-gsod-2021-proposal-for-improve-the-grpc-and-openapi-ecosystem/gsod-2021.png" xmlns:media="http://search.yahoo.com/mrss/" /></entry><entry><title type="html">Win10通过Docker搭建Web协议服务开发机器人</title><link href="https://wechaty.js.org/2021/05/18/win10-use-docker-build-web-protocol-server-develop-bot/" rel="alternate" type="text/html" title="Win10通过Docker搭建Web协议服务开发机器人" /><published>2021-05-18T00:00:00+00:00</published><updated>2021-05-18T00:00:00+00:00</updated><id>https://wechaty.js.org/2021/05/18/win10-use-docker-build-web-protocol-server-develop-bot</id><content type="html" xml:base="https://wechaty.js.org/2021/05/18/win10-use-docker-build-web-protocol-server-develop-bot/">&lt;h2 id=&quot;介绍&quot;&gt;介绍&lt;/h2&gt;
+
+&lt;h3 id=&quot;背景介绍&quot;&gt;背景介绍&lt;/h3&gt;
+
+&lt;p&gt;最近本人在自学编程，选择的是python语言，自学一段时间后，自我感觉理论知识良好，需要找项目实践。然后找到python-wechaty这个项目，并加入微信群。在四月底听到群里说web协议复活后，决定亲手尝试一下。在尝试的过程中，遇到不少困难，最终在群友们的指点下顺利的走通整个流程。也就是说顺利的执行了ding-dong-bot。考虑到群里可能也有和我一样的小白，所以决定记录一下自己开发的过程，并发表出来，希望能帮助和我之前有一样困惑的朋友，节约他们的摸索时间。&lt;/p&gt;
+
+&lt;h3 id=&quot;本文读者&quot;&gt;本文读者&lt;/h3&gt;
+
+&lt;p&gt;如果您不是和我一样的小白，那么这篇文章很可能就不适合您了。本文面向的读者是和我一样，在win10开发环境下，想用docker来搭建免费web协议服务，通过python-wechaty来开发机器人的小白或零基础的朋友。&lt;/p&gt;
+
+&lt;h3 id=&quot;开发环境&quot;&gt;开发环境&lt;/h3&gt;
+
+&lt;p&gt;本人的开发环境如下，win10系统版本号1909，Docker Desktop版本3.3.1，Pycharm版本2020.3，python3.7。&lt;/p&gt;
+
+&lt;p&gt;不同的版本环境下，可能会有兴许差异，请自我查验。&lt;/p&gt;
+
+&lt;h2 id=&quot;正文&quot;&gt;正文&lt;/h2&gt;
+
+&lt;p&gt;通过免费web协议服务来开发python-wechaty微信机器人分为两个步骤&lt;/p&gt;
+
+&lt;h3 id=&quot;docker启动web服务&quot;&gt;docker启动web服务&lt;/h3&gt;
+
+&lt;p&gt;首先我们需要在docker启动web协议服务容器，启动docker容器之前，我们对其进行简单配置，考虑到我的系统是windows，所以并不支持export指令。在windows下，用set替代export。但是最后结果并不理想，容器在启动之后立马又关闭了，所以就不细说了。&lt;/p&gt;
+
+&lt;p&gt;经过对比启动docker其他的容器，并没用出现问题，因此我判断docker软件本身没有问题，最后在群友的帮助下，采用一条指令顺利启动docker容器，打开cmd。输入指令，指令如下&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker run -ti --name wechaty_puppet_service_token_gateway --rm -e WECHATY_LOG=&quot;verbose&quot; -e WECHATY_PUPPET=&quot;wechaty-puppet-service&quot; -e WECHATY_PUPPET_SERVER_PORT=&quot;30001&quot; -e WECHATY_TOKEN=&quot;e9b50dd4-e24d-409e-98aa-53e686101f0c&quot; -p &quot;30001:30001&quot; wechaty/wechaty:latest&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;如果有朋友想复制使用的话，请全部复制，这是一条完整指令。简单介绍：&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;wechaty_puppet_service_token_gateway&lt;/code&gt; 就是我们启动的容器的名字。&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;WECHATY_PUPPET_SERVER_PORT=&quot;30001&quot;&lt;/code&gt;是指端口设定为30001。这个可以根据需要自己设定其他的数字。&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;WECHATY_TOKEN=&quot;e9b50dd4-e24d-409e-98aa-53e686101f0c&quot;&lt;/code&gt;绑定token到web协议服务，这个token是我用uuid自动生成的。在启动之前，请通过python脚本生成所需token。脚本如下：&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;uuid&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;uuid&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;uuid4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;生成的token记录保存下来，请根据自己的需要，修改自己的token。&lt;/p&gt;
+
+&lt;p&gt;这样我们就成功的启动了一个端口在30001的docker容器。启动后cmd立马可以看到如下：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/2021/05-win10-use-docker-build-web-protocol-server-develop-bot/docker-build-web.jpg&quot; alt=&quot;docker-build-web&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;打开docker也可以看到容器已经顺利启动。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/2021/05-win10-use-docker-build-web-protocol-server-develop-bot/docker-status.jpg&quot; alt=&quot;docker-status&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;启动python脚本链接docker容器&quot;&gt;启动python脚本链接docker容器&lt;/h3&gt;
+
+&lt;p&gt;启动容器之后，接下来我们就需要用python脚本去链接这个容器，&lt;/p&gt;
+
+&lt;p&gt;脚本如下：&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;os&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;asyncio&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;wechaty&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;FileBox&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Wechaty&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Contact&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Message&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Room&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;environ&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'WECHATY_PUPPET_SERVICE_ENDPOINT'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'127.0.0.1:30001'&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;environ&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'WECHATY_PUPPET_SERVICE_TOKEN'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'e9b50dd4-e24d-409e-98aa-53e686101f0c'&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;MyBot&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Wechaty&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;async&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;on_message&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Message&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;s&quot;&gt;&quot;&quot;&quot;
+        listen for message event
+        &quot;&quot;&quot;&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;from_contact&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Optional&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Contact&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;talker&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;text&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;text&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;room&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Optional&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Room&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;room&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;text&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'ding'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;conversation&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Union&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;Room&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Contact&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;from_contact&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;room&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;is&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;None&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;room&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;await&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conversation&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ready&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;await&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conversation&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;say&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'dong'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;file_box&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;FileBox&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;from_url&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+                &lt;span class=&quot;s&quot;&gt;'https://ss3.bdstatic.com/70cFv8Sh_Q1YnxGkpoWK1HF6hhy/it/'&lt;/span&gt;
+                &lt;span class=&quot;s&quot;&gt;'u=1116676390,2305043183&amp;amp;fm=26&amp;amp;gp=0.jpg'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'ding-dong.jpg'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;await&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conversation&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;say&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;file_box&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;asyncio&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;MyBot&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;start&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;代码的主要部分来源于官方文档，我们需要做的就是两个事情，一个绑定web协议服务端口，因为我的docker容器是本地运行的，所以&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;os.environ['WECHATY_PUPPET_SERVICE_ENDPOINT'] = '127.0.0.1:30001'&lt;/code&gt; ，指定端口到本地的30001端口。第二个就是token进行一个绑定&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;os.environ['WECHATY_PUPPET_SERVICE_TOKEN'] = 'e9b50dd4-e24d-409e-98aa-53e686101f0c'&lt;/code&gt;，如果不进行这个操作，执行程序就会报错，token不存在。这个token必须和我们之前配置docker容器的token保持一致，否则就无法执行。&lt;/p&gt;
+
+&lt;p&gt;代码写好后，执行代码，会出现一个二维码，要求我们扫码登录。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/2021/05-win10-use-docker-build-web-protocol-server-develop-bot/run-python.jpg&quot; alt=&quot;run-python&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;目前会有一个问题就是二维码太大了，无法扫描。不过官方很贴心的给了一个链接，点击链接就会跳转到一个可以扫描的二维码页面出了，扫码登录即可。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/2021/05-win10-use-docker-build-web-protocol-server-develop-bot/scan-qrcode.jpg&quot; alt=&quot;scan-qrcode&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;扫码登陆微信后就可以验证，发送ding，机器人会自动回复dong。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/2021/05-win10-use-docker-build-web-protocol-server-develop-bot/ding-dong.jpg&quot; alt=&quot;ding-dong&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;补充内容&quot;&gt;补充内容&lt;/h2&gt;
+
+&lt;h3 id=&quot;更改docker镜像位置否则立马占满空间&quot;&gt;更改docker镜像位置，否则立马占满空间&lt;/h3&gt;
+
+&lt;p&gt;程序运行一晚上后，我发现我的C盘可用空间急速下降。通过调查发现，docker的镜像默认位置就是C盘，所以我需要通过更改docker镜像位置来避免C盘可用空间不足导致的程序崩溃。首先将docker镜像导出：我这里将镜像文件导入到e盘。&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;wsl &lt;span class=&quot;nt&quot;&gt;--export&lt;/span&gt; docker-desktop-data e:&lt;span class=&quot;se&quot;&gt;\w&lt;/span&gt;sl2&lt;span class=&quot;se&quot;&gt;\d&lt;/span&gt;ocker&lt;span class=&quot;se&quot;&gt;\d&lt;/span&gt;ocker-desktop-data.tar
+wsl &lt;span class=&quot;nt&quot;&gt;--export&lt;/span&gt; docker-desktop e:&lt;span class=&quot;se&quot;&gt;\w&lt;/span&gt;sl2&lt;span class=&quot;se&quot;&gt;\d&lt;/span&gt;ocker&lt;span class=&quot;se&quot;&gt;\d&lt;/span&gt;ocker-desktop.tar
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;然后卸载之前的镜像：&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;wsl &lt;span class=&quot;nt&quot;&gt;--unregister&lt;/span&gt; docker-desktop
+wsl &lt;span class=&quot;nt&quot;&gt;--unregister&lt;/span&gt; docker-desktop-data
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;导入镜像文件：&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;wsl &lt;span class=&quot;nt&quot;&gt;--import&lt;/span&gt; docker-desktop e:&lt;span class=&quot;se&quot;&gt;\w&lt;/span&gt;sl2&lt;span class=&quot;se&quot;&gt;\d&lt;/span&gt;ocker&lt;span class=&quot;se&quot;&gt;\d&lt;/span&gt;ocker-desktop e:&lt;span class=&quot;se&quot;&gt;\w&lt;/span&gt;sl2&lt;span class=&quot;se&quot;&gt;\d&lt;/span&gt;ocker&lt;span class=&quot;se&quot;&gt;\d&lt;/span&gt;ocker-desktop.tar &lt;span class=&quot;nt&quot;&gt;--version&lt;/span&gt; 2
+wsl &lt;span class=&quot;nt&quot;&gt;--import&lt;/span&gt; docker-desktop-data e:&lt;span class=&quot;se&quot;&gt;\w&lt;/span&gt;sl2&lt;span class=&quot;se&quot;&gt;\d&lt;/span&gt;ocker&lt;span class=&quot;se&quot;&gt;\d&lt;/span&gt;ocker-desktop-data e:&lt;span class=&quot;se&quot;&gt;\w&lt;/span&gt;sl2&lt;span class=&quot;se&quot;&gt;\d&lt;/span&gt;ocker&lt;span class=&quot;se&quot;&gt;\d&lt;/span&gt;ocker-desktop-data.tar &lt;span class=&quot;nt&quot;&gt;--version&lt;/span&gt; 2
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;最后删除压缩文件：&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;del e:&lt;span class=&quot;se&quot;&gt;\w&lt;/span&gt;sl2&lt;span class=&quot;se&quot;&gt;\d&lt;/span&gt;ocker&lt;span class=&quot;se&quot;&gt;\d&lt;/span&gt;ocker-desktop.tar
+del e:&lt;span class=&quot;se&quot;&gt;\w&lt;/span&gt;sl2&lt;span class=&quot;se&quot;&gt;\d&lt;/span&gt;ocker&lt;span class=&quot;se&quot;&gt;\d&lt;/span&gt;ocker-desktop-data.tar
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;重新启动docker服务，就可以了。&lt;/p&gt;
+
+&lt;h4 id=&quot;多开docker容器达成多开机器人的目的&quot;&gt;多开docker容器，达成多开机器人的目的&lt;/h4&gt;
+
+&lt;p&gt;能不能同时启动多个机器人呢？我这边测试了一下是可以的。&lt;/p&gt;
+
+&lt;p&gt;首先需要再打开一个docker容器，给新的容器自定一个新的名字，同时指定不同的端口和token，新python脚本绑定的端口与token要与新开的docker容器一致。&lt;/p&gt;
+
+&lt;p&gt;然后启动docker容器，再启动python脚本，扫码登录后，测试结果如下：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/2021/05-win10-use-docker-build-web-protocol-server-develop-bot/multi-bot.jpg&quot; alt=&quot;multi-bot&quot; /&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;关闭睡眠状态保持程序的持续运行&quot;&gt;关闭睡眠状态，保持程序的持续运行&lt;/h4&gt;
+
+&lt;p&gt;在中午离开电脑吃饭的时候，我发现机器人并没有回应我发送的ding，查看日志发现，因为电脑断网，虽然docker容器还在运行，python脚本也在运行，但是已经失去了网络连接，python脚本在请求重新扫码。后面分析，win10系统带有的自动睡眠功能会自动断网。导致程序运行失败。为了可以持续运行我的机器人，我选择暂时关闭睡眠功能。打开win10&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;设置&lt;/code&gt;，选择&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;系统&lt;/code&gt;，选择&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;电源和睡眠&lt;/code&gt;，选择&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;睡眠&lt;/code&gt;，设置成&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;从不&lt;/code&gt;。这样你的程序就可以一直运行，而不会因为断网停掉。&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;特别提示：必须使用已经开通了微信支付的微信号扫码登录，否则登录失败，提示开通微信支付。&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;以上就是我本次尝试ding-dong-bot所遇到的一些情况的分享。&lt;/p&gt;
+
+&lt;h2 id=&quot;鸣谢&quot;&gt;鸣谢&lt;/h2&gt;
+
+&lt;p&gt;感谢wechaty社区的辛苦工作，为我提供了可以免费使用的工具，也感谢python-wechaty社区，提供了python可用的测试脚本。&lt;/p&gt;
+
+&lt;p&gt;最后感谢Polygplot Wechaty Home微信群内小伙伴们的指点，否则我一定还需要更多的时间才能走通这个ding-dong机器人流程。&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;感谢您的阅读，考虑到本人水平极其有限，文章难免有差错，若读者发现文中错误，欢迎指正，或联系我修改。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&quot;参考链接&quot;&gt;参考链接：&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://wechaty.js.org/2021/04/17/python-wechaty-use-web/&quot;&gt;教你用python-wecahty和web协议开发机器人&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://wechaty.js.org/docs/puppet-services/diy&quot;&gt;Puppet Service: DIY&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://python-wechaty.readthedocs.io/zh_CN/latest/introduction/use-web-protocol/&quot;&gt;使用免费Web协议&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/wechaty/wechaty.js.org&quot;&gt;How To Post a Blog&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</content><author><name>mrwis</name></author><category term="article" /><category term="blog" /><category term="study" /><category term="web-protocol" /><category term="python" /><summary type="html">介绍</summary><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="https://wechaty.js.org/assets/2021/05-win10-use-docker-build-web-protocol-server-develop-bot/ding-dong.jpg" /><media:content medium="image" url="https://wechaty.js.org/assets/2021/05-win10-use-docker-build-web-protocol-server-develop-bot/ding-dong.jpg" xmlns:media="http://search.yahoo.com/mrss/" /></entry><entry><title type="html">GSoD’21 Week 1 meeting</title><link href="https://wechaty.js.org/2021/05/16/gsod-2021-week1-meeting/" rel="alternate" type="text/html" title="GSoD’21 Week 1 meeting" /><published>2021-05-16T00:00:00+00:00</published><updated>2021-05-16T00:00:00+00:00</updated><id>https://wechaty.js.org/2021/05/16/gsod-2021-week1-meeting</id><content type="html" xml:base="https://wechaty.js.org/2021/05/16/gsod-2021-week1-meeting/">&lt;h2 id=&quot;google-season-of-docs21-week-1-meeting&quot;&gt;Google Season of Docs’21 Week 1 meeting&lt;/h2&gt;
+
+&lt;h3 id=&quot;meeting-summary&quot;&gt;Meeting Summary&lt;/h3&gt;
+
+&lt;p&gt;It was the first meeting of GSoD’21 participants after the selection announcement, I was excited to meet them all, I am glad that I got a chance to host this wonderful meeting.&lt;/p&gt;
+
+&lt;p&gt;In this meeting, firstly we had a discussion to set up a day and a time for future meetings, after that every participant gave his week summary and told us about their plans for the upcoming week. After that, we discussed whether we should stretch the main project’s timeline or not. Next Simin leads a discussion about documentation structure and style. Later we had a suggestions/Q&amp;amp;A session, and at last, we took a lovely group photo.&lt;/p&gt;
+
+&lt;div style=&quot;
+    position: relative;
+    padding-bottom: 56.25%;
+    padding-top:30px;
+    height:0;
+    overflow:hidden;
+&quot;&gt;
+  &lt;iframe src=&quot;https://www.youtube.com/embed/y2APh819H1U&quot; allowfullscreen=&quot;&quot; webkitallowfullscreen=&quot;&quot; frameborder=&quot;0&quot; style=&quot;
+      position: absolute;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+    &quot;&gt;
+&lt;/iframe&gt;
+
+&lt;/div&gt;
+
+&lt;h3 id=&quot;attendees&quot;&gt;Attendees&lt;/h3&gt;
+
+&lt;p&gt;Total 13 attendees attended the meeting. They are:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Rohitesh Jain, Volunteer (UTC + 5:30)&lt;/li&gt;
+  &lt;li&gt;Sajen Sarvajith, Reconstruct Landing page writer (UTC + 5:30)&lt;/li&gt;
+  &lt;li&gt;Abhishek Jaiswal, How-to-guide section writer (UTC + 05:30)&lt;/li&gt;
+  &lt;li&gt;Simin Liao, Volunteer (+8:00)&lt;/li&gt;
+  &lt;li&gt;Mukosa Joseph mawa, Introductions and Explanations section writer (UTC +03:00)&lt;/li&gt;
+  &lt;li&gt;Rajiv Ranjan Singh, Improve the gRPC and OpenAPI ecosystem writer, rajivperfect007@gmail.com, IST (UTC +5:30)&lt;/li&gt;
+  &lt;li&gt;Souvik Biswas, Create easy to learn tutorials for beginner users writer, sbis1999@gmail.com (UTC +05:30)&lt;/li&gt;
+  &lt;li&gt;Soumi Bardhan, Improve References section writer (UTC + 5:30)&lt;/li&gt;
+  &lt;li&gt;Shraddha Vasant Prasad,Improve References sectio writer (UTC + 5:30)&lt;/li&gt;
+  &lt;li&gt;Shwetal Soni, Create easy to learn tutorials for beginners users writer (UTC +05:30)&lt;/li&gt;
+  &lt;li&gt;Chris Estepa,  Introduction and Explanations sections writer (UTC +08:00)&lt;/li&gt;
+  &lt;li&gt;Vasvi Sood, How to guides, contactvasvisood@gmail.com writer (UTC + 5:30)&lt;/li&gt;
+  &lt;li&gt;Arnab Saha, Reconstruction of Landing page with value propositions writer (UTC + 5:30)&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/2021/05-gsod-2021-week1-meeting/gsod-meeting-teasor.webp&quot; alt=&quot;Google Season of Docs 2021: Wechaty GSoD'21 Group Photo&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;agendas&quot;&gt;Agendas&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://youtu.be/y2APh819H1U?t=14&quot;&gt;0:00:14&lt;/a&gt; 1. Requesting participants to join the Wechaty mailing list&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://youtu.be/y2APh819H1U?t=50&quot;&gt;0:00:50&lt;/a&gt; 2. Discussion for fixing the day and the time for future meetings.&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://youtu.be/y2APh819H1U?t=220&quot;&gt;0:03:40&lt;/a&gt; 3. Week Summaries &amp;amp; plans of the participants&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://youtu.be/y2APh819H1U?t=815&quot;&gt;0:13:35&lt;/a&gt; 4. Discussion for resolving timeline conflicts&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://youtu.be/y2APh819H1U?t=920&quot;&gt;0:15:20&lt;/a&gt; 5. Discussion about documentation structure and style&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://youtu.be/y2APh819H1U?t=2460&quot;&gt;0:41:00&lt;/a&gt; 6. Questions &amp;amp; Comments&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;You can learn more from our &lt;a href=&quot;https://docs.google.com/document/d/1fVCk8qRYc4RKGMf2UY5HOe07hEhPUOpGC34v88GEFJg/edit#heading=h.edr3nzd8l43b&quot;&gt;meeting notes&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&quot;meeting-outcomes&quot;&gt;Meeting Outcomes&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Everyone joined the Wechaty mailing list&lt;/li&gt;
+  &lt;li&gt;Sunday has been voted as the day for the weekly meetings&lt;/li&gt;
+  &lt;li&gt;Future meetings will be scheduled on 19:00 UTC + 8&lt;/li&gt;
+  &lt;li&gt;The main project’s timeline got stretched from 12 to 17 weeks&lt;/li&gt;
+  &lt;li&gt;It’s decided that the project overlaps will be resolved by the next Friday (21 May)&lt;/li&gt;
+  &lt;li&gt;We will be using PR’s for documentation review&lt;/li&gt;
+  &lt;li&gt;It’s decided that there will be no mid review week&lt;/li&gt;
+  &lt;li&gt;Tech writers got to know how they are supposed to contact volunteer(s) based on their preferences which are written in the communication section of the &lt;a href=&quot;https://wechaty.js.org/2021/05/12/gsod-2021-volunteering-proposal/&quot;&gt;volunteer proposal&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</content><author><name>rohitesh-kumar-jain</name></author><category term="gsod" /><category term="google" /><category term="gsod" /><category term="event" /><category term="gsod" /><category term="2021" /><category term="zoom" /><category term="docs" /><summary type="html">Google Season of Docs’21 Week 1 meeting</summary><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="https://wechaty.js.org/assets/2021/05-gsod-2021-week1-meeting/gsod-meeting-teasor.webp" /><media:content medium="image" url="https://wechaty.js.org/assets/2021/05-gsod-2021-week1-meeting/gsod-meeting-teasor.webp" xmlns:media="http://search.yahoo.com/mrss/" /></entry><entry><title type="html">Google Season of Docs 2021 Team Proposal - Introduction and Explanation</title><link href="https://wechaty.js.org/2021/05/13/gsod-2021-improve-introduction-and-explanation-project-joint-proposal/" rel="alternate" type="text/html" title="Google Season of Docs 2021 Team Proposal - Introduction and Explanation" /><published>2021-05-13T00:00:00+00:00</published><updated>2021-05-13T00:00:00+00:00</updated><id>https://wechaty.js.org/2021/05/13/gsod-2021-improve-introduction-and-explanation-project-joint-proposal</id><content type="html" xml:base="https://wechaty.js.org/2021/05/13/gsod-2021-improve-introduction-and-explanation-project-joint-proposal/">&lt;p&gt;This is the joint project proposal for &lt;strong&gt;Improve the Introduction and Explanations&lt;/strong&gt; secondary project under Google Season of Docs 2021. It is estimated that this project will take approximately &lt;strong&gt;06 weeks&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;h2 id=&quot;technical-writers&quot;&gt;Technical writers&lt;/h2&gt;
+
+&lt;h3 id=&quot;mukosa-joseph-mawa&quot;&gt;Mukosa Joseph Mawa&lt;/h3&gt;
+
+&lt;p&gt;I am a self-taught web developer and technical writer with a passion for open source software. I have published a number of beginner friendly technical articles on &lt;a href=&quot;https://dev.to/nibble&quot;&gt;dev.to&lt;/a&gt; and &lt;a href=&quot;https://www.freecodecamp.org/news/author/joseph/&quot;&gt;freeCodeCamp&lt;/a&gt;. Before transitioning into tech, I was a high school teacher. One of my core responsibilities as a teacher was simplifying and sequencing text written in complex technical language for learners to easily understand. I have also been a frequent contributor to a couple of open source software. Notable ones are &lt;a href=&quot;https://github.com/ocaml/ocaml.org&quot;&gt;ocaml.org&lt;/a&gt; and &lt;a href=&quot;https://github.com/disease-sh/API&quot;&gt;disease.sh&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&quot;chris-estepa&quot;&gt;Chris Estepa&lt;/h3&gt;
+
+&lt;p&gt;Currently, I am a full-time technical writer supporting users how to use their applications by creating how-tos, video tutorials, training materials, FAQs, and requirement analysis documents, among others.&lt;/p&gt;
+
+&lt;p&gt;I love technical writing because it being a combination of communication and technology allows me to write and provide support to users, especially newbies. I know the pain and frustration of not getting the information that the users need and now, I am here to help users through my writing. Through GSOD and Wechaty, I will be able to engage more users to have a wonderful experience with their Wechaty chatbots.&lt;/p&gt;
+
+&lt;h2 id=&quot;proposal-video-presentation&quot;&gt;Proposal Video Presentation&lt;/h2&gt;
+
+&lt;div style=&quot;
+    position: relative;
+    padding-bottom: 56.25%;
+    padding-top:30px;
+    height:0;
+    overflow:hidden;
+&quot;&gt;
+  &lt;iframe src=&quot;https://www.youtube.com/embed/HghT9K8JNSI&quot; allowfullscreen=&quot;&quot; webkitallowfullscreen=&quot;&quot; frameborder=&quot;0&quot; style=&quot;
+      position: absolute;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+    &quot;&gt;
+&lt;/iframe&gt;
+
+&lt;/div&gt;
+
+&lt;h2 id=&quot;project-title&quot;&gt;Project title&lt;/h2&gt;
+
+&lt;p&gt;Improve the Introduction and Explanations sections of wechaty.js.org.&lt;/p&gt;
+
+&lt;h2 id=&quot;project-scope&quot;&gt;Project scope&lt;/h2&gt;
+
+&lt;p&gt;The scope of this project is limited to improving the Introduction and Explanation sections of the wechaty.js.org website.&lt;/p&gt;
+
+&lt;h2 id=&quot;project-goal&quot;&gt;Project goal&lt;/h2&gt;
+
+&lt;p&gt;Our goal is for users not to lose interest upon landing on the Wechaty site. We plan to make the Introduction section succinct and engaging by also showing them what they are looking for and what they will be getting when they start creating their very own chatbots. More useful information will be shown in Explanations, to help users further understand and appreciate what Wechaty can do for them. We aim to have a strong documentation that would stand the test of time.&lt;/p&gt;
+
+&lt;h2 id=&quot;analysis-of-the-introduction-and-explanations-sections-of-wechatyjsorg&quot;&gt;Analysis of the Introduction and Explanations sections of wechaty.js.org&lt;/h2&gt;
+
+&lt;p&gt;After the analysis of the &lt;strong&gt;Introduction and Explanations&lt;/strong&gt; sections, the following issues have been identified:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;There are irrelevant content which are not suitable for the introduction.&lt;/li&gt;
+  &lt;li&gt;There are missing and incomplete pieces of information.&lt;/li&gt;
+  &lt;li&gt;Provided explanations are not comprehensive and incoherent.&lt;/li&gt;
+  &lt;li&gt;The sections are poorly structured.&lt;/li&gt;
+  &lt;li&gt;There are lots of typos and grammatical errors.&lt;/li&gt;
+  &lt;li&gt;The section is too long for an introduction.&lt;/li&gt;
+  &lt;li&gt;The sections are too nested and as a result, hiding certain information which should be on the front page.&lt;/li&gt;
+  &lt;li&gt;Some pages lack visual representation that would be comprehensive to users.&lt;/li&gt;
+  &lt;li&gt;Some information may not be understood easily by non-technical users.&lt;/li&gt;
+  &lt;li&gt;Some pages need a more straightforward explanation.
+Some descriptions in the explanations are not comprehensive
+There are many blank and orphaned pages.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;purpose-of-introduction-section-of-wechatyjsorg&quot;&gt;Purpose of Introduction section of wechaty.js.org&lt;/h2&gt;
+
+&lt;p&gt;The introduction section of wechaty.js.org serves the following purposes:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Help technical and non-technical people understand what Wechaty is.&lt;/li&gt;
+  &lt;li&gt;Help potential individual and institutional users of Wechaty understand some of the business challenges/problems they can solve by using Wechaty.&lt;/li&gt;
+  &lt;li&gt;Help total beginners understand how to start using or learning Wechaty.&lt;/li&gt;
+  &lt;li&gt;Helps the user understand why and what sets Wechaty apart from other chatbot makers.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;purpose-of-explanation-section-of-wechatyjsorg&quot;&gt;Purpose of explanation section of wechaty.js.org&lt;/h2&gt;
+
+&lt;p&gt;The explanation section of wechaty.js.org serves the following purposes:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Describe other concrete pieces of information which have not been covered in other areas of the documentation in an easy manner understood by all types of users esp. non-technical users.&lt;/li&gt;
+  &lt;li&gt;Deepen and enrich users’ knowledge of Wechaty by providing alternative/contrary viewpoints and approaches than what has been presented in other sections of the documentation.&lt;/li&gt;
+  &lt;li&gt;Educate users and arouse their interest by showing the technical, non-technical and business side of WeChaty which have not been covered in other sections of the documentation.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;project-approach&quot;&gt;Project approach&lt;/h2&gt;
+
+&lt;p&gt;This is a brief overview of how we intend to approach the project in an attempt to solve the identified problems. This plan will change as feedback is sought from the stakeholders. We propose the current Introduction section to be replaced by the following content. This however will mostly depend on the final decision on how the entire wechaty.js.org is to be designed, or structured since there are quite a number of technical writers writing proposals on how to improve the different sections of wechaty.js.org.&lt;/p&gt;
+
+&lt;h3 id=&quot;proposed-content-for-introduction-section&quot;&gt;Proposed content for Introduction section&lt;/h3&gt;
+
+&lt;p&gt;It is proposed that the following questions should be used as guide when writing the introduction section:&lt;/p&gt;
+
+&lt;h4 id=&quot;what-is-wechaty&quot;&gt;What is Wechaty?&lt;/h4&gt;
+
+&lt;p&gt;This section should include the following:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Brief introduction to what Wechaty is&lt;/p&gt;
+
+    &lt;p&gt;This must be written for both technical and non technical audiences. Meaning of acronyms such as IM, SDK, etc. should be made explicitly clear by linking to their full versions. Thus, whoever is not familiar with it can look it up and understand what is being talked about.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Who are the People/Companies behind Wechaty?&lt;/p&gt;
+
+    &lt;p&gt;Who are the original creators of Wechaty? When was it created? Are there companies, individuals, government, and entities supporting the development of Wechaty? Are there companies who have supported the development of Wechaty in the past or planning to provide support in the future?&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;How many releases have been made since its creation?&lt;/p&gt;
+
+    &lt;p&gt;What is the current stable version of Wechaty? How many releases have been made since its creation? Are there plans for another major release? Are there ongoing major projects around Wechaty at the moment?&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Original motivation for creating Wechaty&lt;/p&gt;
+
+    &lt;p&gt;What was the story behind Wechaty? Every software project must seek to provide a solution to a business or societal problem. What were the founders of Wechaty seeking to solve by starting Wechaty? This area will need a lot of input from the creators of Wechaty.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;The long term Vision and Mission of Wechaty&lt;/p&gt;
+
+    &lt;p&gt;This must be well thought of because it will give a sense of confidence to users of Wechaty about long term support and development. A person who wishes to solve a business problem using Wechaty should feel confident that there are visionary people committed to the long term development of the software their business runs on. This area will also need a lot of input from the creators of Wechaty.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;what-can-you-do-with-wechaty&quot;&gt;What can you do with Wechaty?&lt;/h4&gt;
+
+&lt;p&gt;This section should comprehensively cover the following:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;What problems can businesses/ individuals solve with Wechaty?&lt;/p&gt;
+
+    &lt;p&gt;This section will give a Wechaty user the motivation to learn and use Wechaty if it is properly articulated. It gives users a sense of purpose if they notice that Wechaty is capable of solving a business challenge that they are facing.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;What business problems have been solved by using Wechaty?&lt;/li&gt;
+  &lt;li&gt;How has Wechaty solved the problems of people/businesses?&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;who-is-using-wechaty&quot;&gt;Who is using Wechaty?&lt;/h4&gt;
+
+&lt;p&gt;In this section, we need to get testimonials from people/businesses who have used Wechaty before and how they find Wechaty. What are they saying about Wechaty? How has Wechaty solved their problem?
+This section should seek to comprehensively answer the following questions:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Which companies/individuals are using Wechaty?&lt;/li&gt;
+  &lt;li&gt;Are there testimonials from users of Wechaty on the value it has delivered to their businesses? Here, we also need to provide links to the live Projects built using Wechaty.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;proposed-content-for-explanations-section&quot;&gt;Proposed content for Explanations section&lt;/h3&gt;
+
+&lt;p&gt;The Explanation section is primarily for broadening the documentation’s coverage of the different topics therefore its content will very much depend on the other sections of the documentation. The outline below is not cast in stone. Some items might be removed or added as the different projects evolve.&lt;/p&gt;
+
+&lt;p&gt;It is proposed that the following should be used as guide when writing the Explanation section:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Overview&lt;/p&gt;
+
+    &lt;p&gt;This will be discussed based on a high level perspective but in a way that most users (esp. newbies) would understand. This page will let users know other information that they have to know. In order to do this, we will need more information from the subject-matter experts.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Lifecycle&lt;/p&gt;
+
+    &lt;p&gt;A concise explanation on the typical phases in the development (including some activities and deliverables being done) of Wechaty to inform users, sponsors, and investors about what is happening with the project.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Architecture&lt;/p&gt;
+
+    &lt;p&gt;A short but thorough chatbot architecture must be explained here. A diagram would also make the explanation clearer.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Alternatives&lt;/p&gt;
+
+    &lt;p&gt;In this section we shall present alternatives to Wechaty.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Testing&lt;/p&gt;
+
+    &lt;p&gt;An overview on how we perform testing is imperative so that users would know what is being tested, what to expect and not to expect, and learn more about the bugs and defects that we encounter while using Wechaty. Other types of issues can be discussed here, including the types of actions and expected output or solutions.
+Triaging of bugs and issues may be clearly specified here, by highlighting the issues and the bugs that need intensive testing. Priorities may also be established including the severity of the bugs, whereby the Wechaty team would know what the problems are and how to deal with them.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;DevOps CI/CD&lt;/p&gt;
+
+    &lt;p&gt;We can explain how WeChaty uses and benefits from DevOps and CI/CD processes. Some information is needed from the SMEs to expound this.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Software Development Kit (SDK)&lt;/p&gt;
+
+    &lt;p&gt;Conversational and Robotic Process Automation SDK information will be discussed here.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Troubleshooting&lt;/p&gt;
+
+    &lt;p&gt;In this section, we will determine and pinpoint the most difficult and most common problems that users encounter. On the spot solutions are provided here to enable users to learn what to do first hand upon encountering issues.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;proposed-solution&quot;&gt;Proposed solution&lt;/h2&gt;
+
+&lt;p&gt;We propose to improve the structure and documentation approach of the Introduction and Explanations sections. These are critical sections that any user must read to fully understand what Wechaty is all about.&lt;/p&gt;
+
+&lt;h3 id=&quot;other-to-dos-or-suggestions&quot;&gt;Other to-dos or suggestions&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Include a diagram, workflow, or any other visual representation to make the sections more comprehensive and informative.&lt;/li&gt;
+  &lt;li&gt;Include Other Related Pages links for better and easier navigation.&lt;/li&gt;
+  &lt;li&gt;Include a Contact Us page that contains some support links or a form where users can write their questions and suggestions.&lt;/li&gt;
+  &lt;li&gt;Include testing and friction logs that will serve as good references in the future.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;things-to-pay-attention-to-while-writing-the-introduction-and-explanations-sections&quot;&gt;Things to pay attention to while writing the introduction and explanations sections&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Use simple English that a non-native speaker can easily understand without having to look for the meaning of words or phrases.&lt;/li&gt;
+  &lt;li&gt;Avoid long sentences.&lt;/li&gt;
+  &lt;li&gt;Minimize use of acronyms and initialisms.&lt;/li&gt;
+  &lt;li&gt;Avoid unnecessary long paragraphs which might confuse beginners.&lt;/li&gt;
+  &lt;li&gt;Use formal language.&lt;/li&gt;
+  &lt;li&gt;Be gender-sensitive. Gender neutral language is better.&lt;/li&gt;
+  &lt;li&gt;Pay attention to grammar and spelling.&lt;/li&gt;
+  &lt;li&gt;Pay attention to technical accuracy.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;proposed-timeline&quot;&gt;Proposed timeline&lt;/h2&gt;
+
+&lt;p&gt;It is estimated that this project will take six weeks. Below is the estimated timeline and the subtasks which will be accomplished. It is worth pointing out that the processes below are not linear. They are iterative, cyclical, and can change whenever feedback is received from different stakeholders and therefore, incorporated in the project.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Week 1: &lt;strong&gt;Hiring process&lt;/strong&gt;&lt;/p&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;Refining proposal to meet stakeholder needs/expectations&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Week 2: &lt;strong&gt;Introduction&lt;/strong&gt;&lt;/p&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;What is wechaty section&lt;/li&gt;
+      &lt;li&gt;What can you do with wechaty section&lt;/li&gt;
+      &lt;li&gt;Who is using Wechaty section&lt;/li&gt;
+      &lt;li&gt;Integrating feedback from stakeholders&lt;/li&gt;
+      &lt;li&gt;Miscellaneous&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Week 3: &lt;strong&gt;Introduction&lt;/strong&gt;&lt;/p&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;Getting started with Wechaty&lt;/li&gt;
+      &lt;li&gt;Main concepts in Wechaty&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Week 4: &lt;strong&gt;Explanation&lt;/strong&gt;&lt;/p&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;Life Cycle&lt;/li&gt;
+      &lt;li&gt;Architecture&lt;/li&gt;
+      &lt;li&gt;Testing&lt;/li&gt;
+      &lt;li&gt;Troubleshooting&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Week 5: &lt;strong&gt;Explanation&lt;/strong&gt;&lt;/p&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;DevOps CI/CD&lt;/li&gt;
+      &lt;li&gt;SDK&lt;/li&gt;
+      &lt;li&gt;Troubleshooting&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Week 6: &lt;strong&gt;Project Evaluation&lt;/strong&gt;&lt;/p&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;Project Evaluation&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;project-budget&quot;&gt;Project budget&lt;/h2&gt;
+
+&lt;p&gt;The project budget is 1000USD which will be shared equally between the two technical writers&lt;/p&gt;</content><author><name>nibble0101</name></author><category term="gsod" /><category term="google" /><category term="gsod" /><category term="2021" /><category term="docs" /><category term="tutorials" /><category term="project" /><category term="proposal" /><category term="team-proposal" /><summary type="html">This is the joint project proposal for Improve the Introduction and Explanations secondary project under Google Season of Docs 2021. It is estimated that this project will take approximately 06 weeks.</summary><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="https://wechaty.js.org/assets/2021/05-gsod-2021-improve-introduction-and-explanation-project-joint-proposal/introduction-and-explanation.png" /><media:content medium="image" url="https://wechaty.js.org/assets/2021/05-gsod-2021-improve-introduction-and-explanation-project-joint-proposal/introduction-and-explanation.png" xmlns:media="http://search.yahoo.com/mrss/" /></entry></feed>
